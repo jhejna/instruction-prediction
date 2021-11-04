@@ -1,0 +1,954 @@
+{
+    "rules": [
+        {
+            "created_items": {
+                "Iron Stairs": 1
+            },
+            "rule_name": "craft_Iron Stairs",
+            "required_action": "craft",
+            "required_location": "Iron Stairs Station",
+            "depleted_items": {
+                "Iron Ore": 1
+            },
+            "spawn_ind": 1
+        },
+        {
+            "created_items": {
+                "Iron Ore": 1
+            },
+            "rule_name": "mine_Iron Ore",
+            "required_action": "mine",
+            "required_location": "Iron Ore Vein",
+            "non_depleted_items": {
+                "Pickaxe": 1
+            },
+            "spawn_ind": 1
+        },
+        {
+            "created_items": {
+                "Gold Stairs": 1
+            },
+            "rule_name": "craft_Gold Stairs",
+            "required_action": "craft",
+            "required_location": "Gold Stairs Station",
+            "depleted_items": {
+                "Gold Ore": 1
+            },
+            "spawn_ind": 1
+        },
+        {
+            "created_items": {
+                "Gold Ore": 1
+            },
+            "rule_name": "mine_Gold Ore",
+            "required_action": "mine",
+            "required_location": "Gold Ore Vein",
+            "non_depleted_items": {
+                "Pickaxe": 1
+            },
+            "spawn_ind": 1
+        },
+        {
+            "created_items": {
+                "Diamond Stairs": 1
+            },
+            "rule_name": "craft_Diamond Stairs",
+            "required_action": "craft",
+            "required_location": "Diamond Stairs Station",
+            "depleted_items": {
+                "Diamond": 1
+            },
+            "spawn_ind": 1
+        },
+        {
+            "created_items": {
+                "Diamond": 1
+            },
+            "rule_name": "mine_Diamond",
+            "required_action": "mine",
+            "required_location": "Diamond Ore Vein",
+            "non_depleted_items": {
+                "Pickaxe": 1
+            },
+            "spawn_ind": 1
+        },
+        {
+            "created_items": {
+                "Leather Stairs": 1
+            },
+            "rule_name": "craft_Leather Stairs",
+            "required_action": "craft",
+            "required_location": "Leather Stairs Station",
+            "depleted_items": {
+                "Leather": 1
+            },
+            "spawn_ind": 1
+        },
+        {
+            "created_items": {
+                "Leather": 1
+            },
+            "rule_name": "craft_Leather",
+            "required_action": "craft",
+            "required_location": "Leather Station",
+            "depleted_items": {
+                "Rabbit Hide": 1
+            },
+            "spawn_ind": 1
+        },
+        {
+            "created_items": {
+                "Rabbit Hide": 1
+            },
+            "rule_name": "mine_Rabbit Hide",
+            "required_action": "mine",
+            "required_location": "Rabbit",
+            "non_depleted_items": {
+                "Sword": 1
+            },
+            "spawn_ind": 1
+        },
+        {
+            "created_items": {
+                "Iron Boots": 1
+            },
+            "rule_name": "craft_Iron Boots",
+            "required_action": "craft",
+            "required_location": "Iron Boots Station",
+            "depleted_items": {
+                "Iron Ingot": 1
+            },
+            "spawn_ind": 1
+        },
+        {
+            "created_items": {
+                "Iron Ingot": 1
+            },
+            "rule_name": "craft_Iron Ingot",
+            "required_action": "craft",
+            "required_location": "Iron Ingot Station",
+            "depleted_items": {
+                "Iron Ore": 1,
+                "Coal": 1
+            },
+            "spawn_ind": 1
+        },
+        {
+            "created_items": {
+                "Coal": 1
+            },
+            "rule_name": "mine_Coal",
+            "required_action": "mine",
+            "required_location": "Coal Vein",
+            "non_depleted_items": {
+                "Pickaxe": 1
+            },
+            "spawn_ind": 1
+        },
+        {
+            "created_items": {
+                "Cobblestone Boots": 1
+            },
+            "rule_name": "craft_Cobblestone Boots",
+            "required_action": "craft",
+            "required_location": "Cobblestone Boots Station",
+            "depleted_items": {
+                "Cobblestone": 1
+            },
+            "spawn_ind": 1
+        },
+        {
+            "created_items": {
+                "Cobblestone": 1
+            },
+            "rule_name": "mine_Cobblestone",
+            "required_action": "mine",
+            "required_location": "Cobblestone Stash",
+            "non_depleted_items": {
+                "Pickaxe": 1
+            },
+            "spawn_ind": 1
+        },
+        {
+            "created_items": {
+                "Stone Boots": 1
+            },
+            "rule_name": "craft_Stone Boots",
+            "required_action": "craft",
+            "required_location": "Stone Boots Station",
+            "depleted_items": {
+                "Cobblestone": 1
+            },
+            "spawn_ind": 1
+        },
+        {
+            "created_items": {
+                "Gold Boots": 1
+            },
+            "rule_name": "craft_Gold Boots",
+            "required_action": "craft",
+            "required_location": "Gold Boots Station",
+            "depleted_items": {
+                "Gold Ingot": 1
+            },
+            "spawn_ind": 1
+        },
+        {
+            "created_items": {
+                "Gold Ingot": 1
+            },
+            "rule_name": "craft_Gold Ingot",
+            "required_action": "craft",
+            "required_location": "Gold Ingot Station",
+            "depleted_items": {
+                "Gold Ore": 1,
+                "Coal": 1
+            },
+            "spawn_ind": 1
+        },
+        {
+            "created_items": {
+                "Brick Boots": 1
+            },
+            "rule_name": "craft_Brick Boots",
+            "required_action": "craft",
+            "required_location": "Brick Boots Station",
+            "depleted_items": {
+                "Brick": 1
+            },
+            "spawn_ind": 1
+        },
+        {
+            "created_items": {
+                "Brick": 1
+            },
+            "rule_name": "mine_Brick",
+            "required_action": "mine",
+            "required_location": "Brick Factory",
+            "non_depleted_items": {
+                "Pickaxe": 1
+            },
+            "spawn_ind": 1
+        },
+        {
+            "created_items": {
+                "Wood Boots": 1
+            },
+            "rule_name": "craft_Wood Boots",
+            "required_action": "craft",
+            "required_location": "Wood Boots Station",
+            "depleted_items": {
+                "Wood Plank": 1
+            },
+            "spawn_ind": 1
+        },
+        {
+            "created_items": {
+                "Wood Plank": 1
+            },
+            "rule_name": "craft_Wood Plank",
+            "required_action": "craft",
+            "required_location": "Wood Plank Station",
+            "depleted_items": {
+                "Wood": 1
+            },
+            "spawn_ind": 1
+        },
+        {
+            "created_items": {
+                "Wood": 1
+            },
+            "rule_name": "mine_Wood",
+            "required_action": "mine",
+            "required_location": "Tree",
+            "non_depleted_items": {
+                "Axe": 1
+            },
+            "spawn_ind": 1
+        },
+        {
+            "created_items": {
+                "Iron Pickaxe": 1
+            },
+            "rule_name": "craft_Iron Pickaxe",
+            "required_action": "craft",
+            "required_location": "Iron Pickaxe Station",
+            "depleted_items": {
+                "Stick": 1,
+                "Iron Ingot": 1
+            },
+            "spawn_ind": 1
+        },
+        {
+            "created_items": {
+                "Stick": 1
+            },
+            "rule_name": "craft_Stick",
+            "required_action": "craft",
+            "required_location": "Stick Station",
+            "depleted_items": {
+                "Wood Plank": 1
+            },
+            "spawn_ind": 1
+        },
+        {
+            "created_items": {
+                "Gold Pickaxe": 1
+            },
+            "rule_name": "craft_Gold Pickaxe",
+            "required_action": "craft",
+            "required_location": "Gold Pickaxe Station",
+            "depleted_items": {
+                "Stick": 1,
+                "Gold Ingot": 1
+            },
+            "spawn_ind": 1
+        },
+        {
+            "created_items": {
+                "Brick Pickaxe": 1
+            },
+            "rule_name": "craft_Brick Pickaxe",
+            "required_action": "craft",
+            "required_location": "Brick Pickaxe Station",
+            "depleted_items": {
+                "Brick": 1,
+                "Stick": 1
+            },
+            "spawn_ind": 1
+        },
+        {
+            "created_items": {
+                "Leather Pickaxe": 1
+            },
+            "rule_name": "craft_Leather Pickaxe",
+            "required_action": "craft",
+            "required_location": "Leather Pickaxe Station",
+            "depleted_items": {
+                "Leather": 1,
+                "Stick": 1
+            },
+            "spawn_ind": 1
+        },
+        {
+            "created_items": {
+                "Wood Pickaxe": 1
+            },
+            "rule_name": "craft_Wood Pickaxe",
+            "required_action": "craft",
+            "required_location": "Wood Pickaxe Station",
+            "depleted_items": {
+                "Stick": 1,
+                "Wood Plank": 1
+            },
+            "spawn_ind": 1
+        },
+        {
+            "created_items": {
+                "Cobblestone Ingot": 1
+            },
+            "rule_name": "craft_Cobblestone Ingot",
+            "required_action": "craft",
+            "required_location": "Cobblestone Ingot Station",
+            "depleted_items": {
+                "Cobblestone": 1,
+                "Coal": 1
+            },
+            "spawn_ind": 1
+        },
+        {
+            "created_items": {
+                "Stone Ingot": 1
+            },
+            "rule_name": "craft_Stone Ingot",
+            "required_action": "craft",
+            "required_location": "Stone Ingot Station",
+            "depleted_items": {
+                "Cobblestone": 1,
+                "Coal": 1
+            },
+            "spawn_ind": 1
+        },
+        {
+            "created_items": {
+                "Brick Ingot": 1
+            },
+            "rule_name": "craft_Brick Ingot",
+            "required_action": "craft",
+            "required_location": "Brick Ingot Station",
+            "depleted_items": {
+                "Brick": 1,
+                "Coal": 1
+            },
+            "spawn_ind": 1
+        },
+        {
+            "created_items": {
+                "Diamond Ingot": 1
+            },
+            "rule_name": "craft_Diamond Ingot",
+            "required_action": "craft",
+            "required_location": "Diamond Ingot Station",
+            "depleted_items": {
+                "Diamond": 1,
+                "Coal": 1
+            },
+            "spawn_ind": 1
+        },
+        {
+            "created_items": {
+                "Leather Ingot": 1
+            },
+            "rule_name": "craft_Leather Ingot",
+            "required_action": "craft",
+            "required_location": "Leather Ingot Station",
+            "depleted_items": {
+                "Leather": 1,
+                "Coal": 1
+            },
+            "spawn_ind": 1
+        },
+        {
+            "created_items": {
+                "Wood Ingot": 1
+            },
+            "rule_name": "craft_Wood Ingot",
+            "required_action": "craft",
+            "required_location": "Wood Ingot Station",
+            "depleted_items": {
+                "Wood Plank": 1
+            },
+            "spawn_ind": 1
+        },
+        {
+            "created_items": {
+                "Iron Leggins": 1
+            },
+            "rule_name": "craft_Iron Leggins",
+            "required_action": "craft",
+            "required_location": "Iron Leggins Station",
+            "depleted_items": {
+                "Iron Ingot": 1
+            },
+            "spawn_ind": 1
+        },
+        {
+            "created_items": {
+                "Cobblestone Leggins": 1
+            },
+            "rule_name": "craft_Cobblestone Leggins",
+            "required_action": "craft",
+            "required_location": "Cobblestone Leggins Station",
+            "depleted_items": {
+                "Cobblestone": 1
+            },
+            "spawn_ind": 1
+        },
+        {
+            "created_items": {
+                "Stone Leggins": 1
+            },
+            "rule_name": "craft_Stone Leggins",
+            "required_action": "craft",
+            "required_location": "Stone Leggins Station",
+            "depleted_items": {
+                "Cobblestone": 1
+            },
+            "spawn_ind": 1
+        },
+        {
+            "created_items": {
+                "Gold Leggins": 1
+            },
+            "rule_name": "craft_Gold Leggins",
+            "required_action": "craft",
+            "required_location": "Gold Leggins Station",
+            "depleted_items": {
+                "Gold Ingot": 1
+            },
+            "spawn_ind": 1
+        },
+        {
+            "created_items": {
+                "Brick Leggins": 1
+            },
+            "rule_name": "craft_Brick Leggins",
+            "required_action": "craft",
+            "required_location": "Brick Leggins Station",
+            "depleted_items": {
+                "Brick": 1
+            },
+            "spawn_ind": 1
+        },
+        {
+            "created_items": {
+                "Diamond Leggins": 1
+            },
+            "rule_name": "craft_Diamond Leggins",
+            "required_action": "craft",
+            "required_location": "Diamond Leggins Station",
+            "depleted_items": {
+                "Diamond": 1
+            },
+            "spawn_ind": 1
+        },
+        {
+            "created_items": {
+                "Wood Leggins": 1
+            },
+            "rule_name": "craft_Wood Leggins",
+            "required_action": "craft",
+            "required_location": "Wood Leggins Station",
+            "depleted_items": {
+                "Wood Plank": 1
+            },
+            "spawn_ind": 1
+        },
+        {
+            "created_items": {
+                "Iron Door": 1
+            },
+            "rule_name": "craft_Iron Door",
+            "required_action": "craft",
+            "required_location": "Iron Door Station",
+            "depleted_items": {
+                "Iron Ingot": 1
+            },
+            "spawn_ind": 1
+        },
+        {
+            "created_items": {
+                "Cobblestone Door": 1
+            },
+            "rule_name": "craft_Cobblestone Door",
+            "required_action": "craft",
+            "required_location": "Cobblestone Door Station",
+            "depleted_items": {
+                "Cobblestone": 1
+            },
+            "spawn_ind": 1
+        },
+        {
+            "created_items": {
+                "Stone Door": 1
+            },
+            "rule_name": "craft_Stone Door",
+            "required_action": "craft",
+            "required_location": "Stone Door Station",
+            "depleted_items": {
+                "Cobblestone": 1
+            },
+            "spawn_ind": 1
+        },
+        {
+            "created_items": {
+                "Gold Door": 1
+            },
+            "rule_name": "craft_Gold Door",
+            "required_action": "craft",
+            "required_location": "Gold Door Station",
+            "depleted_items": {
+                "Gold Ore": 1
+            },
+            "spawn_ind": 1
+        },
+        {
+            "created_items": {
+                "Brick Door": 1
+            },
+            "rule_name": "craft_Brick Door",
+            "required_action": "craft",
+            "required_location": "Brick Door Station",
+            "depleted_items": {
+                "Brick": 1
+            },
+            "spawn_ind": 1
+        },
+        {
+            "created_items": {
+                "Diamond Door": 1
+            },
+            "rule_name": "craft_Diamond Door",
+            "required_action": "craft",
+            "required_location": "Diamond Door Station",
+            "depleted_items": {
+                "Diamond": 1
+            },
+            "spawn_ind": 1
+        },
+        {
+            "created_items": {
+                "Leather Door": 1
+            },
+            "rule_name": "craft_Leather Door",
+            "required_action": "craft",
+            "required_location": "Leather Door Station",
+            "depleted_items": {
+                "Leather": 1
+            },
+            "spawn_ind": 1
+        },
+        {
+            "created_items": {
+                "Iron Chestplate": 1
+            },
+            "rule_name": "craft_Iron Chestplate",
+            "required_action": "craft",
+            "required_location": "Iron Chestplate Station",
+            "depleted_items": {
+                "Iron Ingot": 1
+            },
+            "spawn_ind": 1
+        },
+        {
+            "created_items": {
+                "Cobblestone Chestplate": 1
+            },
+            "rule_name": "craft_Cobblestone Chestplate",
+            "required_action": "craft",
+            "required_location": "Cobblestone Chestplate Station",
+            "depleted_items": {
+                "Cobblestone": 1
+            },
+            "spawn_ind": 1
+        },
+        {
+            "created_items": {
+                "Stone Chestplate": 1
+            },
+            "rule_name": "craft_Stone Chestplate",
+            "required_action": "craft",
+            "required_location": "Stone Chestplate Station",
+            "depleted_items": {
+                "Cobblestone": 1
+            },
+            "spawn_ind": 1
+        },
+        {
+            "created_items": {
+                "Gold Chestplate": 1
+            },
+            "rule_name": "craft_Gold Chestplate",
+            "required_action": "craft",
+            "required_location": "Gold Chestplate Station",
+            "depleted_items": {
+                "Gold Ingot": 1
+            },
+            "spawn_ind": 1
+        },
+        {
+            "created_items": {
+                "Brick Chestplate": 1
+            },
+            "rule_name": "craft_Brick Chestplate",
+            "required_action": "craft",
+            "required_location": "Brick Chestplate Station",
+            "depleted_items": {
+                "Brick": 1
+            },
+            "spawn_ind": 1
+        },
+        {
+            "created_items": {
+                "Diamond Chestplate": 1
+            },
+            "rule_name": "craft_Diamond Chestplate",
+            "required_action": "craft",
+            "required_location": "Diamond Chestplate Station",
+            "depleted_items": {
+                "Diamond": 1
+            },
+            "spawn_ind": 1
+        },
+        {
+            "created_items": {
+                "Wood Chestplate": 1
+            },
+            "rule_name": "craft_Wood Chestplate",
+            "required_action": "craft",
+            "required_location": "Wood Chestplate Station",
+            "depleted_items": {
+                "Wood Plank": 1
+            },
+            "spawn_ind": 1
+        },
+        {
+            "created_items": {
+                "Iron Helmet": 1
+            },
+            "rule_name": "craft_Iron Helmet",
+            "required_action": "craft",
+            "required_location": "Iron Helmet Station",
+            "depleted_items": {
+                "Iron Ingot": 1
+            },
+            "spawn_ind": 1
+        },
+        {
+            "created_items": {
+                "Cobblestone Helmet": 1
+            },
+            "rule_name": "craft_Cobblestone Helmet",
+            "required_action": "craft",
+            "required_location": "Cobblestone Helmet Station",
+            "depleted_items": {
+                "Cobblestone": 1
+            },
+            "spawn_ind": 1
+        },
+        {
+            "created_items": {
+                "Stone Helmet": 1
+            },
+            "rule_name": "craft_Stone Helmet",
+            "required_action": "craft",
+            "required_location": "Stone Helmet Station",
+            "depleted_items": {
+                "Cobblestone": 1
+            },
+            "spawn_ind": 1
+        },
+        {
+            "created_items": {
+                "Gold Helmet": 1
+            },
+            "rule_name": "craft_Gold Helmet",
+            "required_action": "craft",
+            "required_location": "Gold Helmet Station",
+            "depleted_items": {
+                "Gold Ingot": 1
+            },
+            "spawn_ind": 1
+        },
+        {
+            "created_items": {
+                "Brick Helmet": 1
+            },
+            "rule_name": "craft_Brick Helmet",
+            "required_action": "craft",
+            "required_location": "Brick Helmet Station",
+            "depleted_items": {
+                "Brick": 1
+            },
+            "spawn_ind": 1
+        },
+        {
+            "created_items": {
+                "Diamond Helmet": 1
+            },
+            "rule_name": "craft_Diamond Helmet",
+            "required_action": "craft",
+            "required_location": "Diamond Helmet Station",
+            "depleted_items": {
+                "Diamond": 1
+            },
+            "spawn_ind": 1
+        },
+        {
+            "created_items": {
+                "Wood Helmet": 1
+            },
+            "rule_name": "craft_Wood Helmet",
+            "required_action": "craft",
+            "required_location": "Wood Helmet Station",
+            "depleted_items": {
+                "Wood Plank": 1
+            },
+            "spawn_ind": 1
+        }
+    ],
+    "spawns": [
+        {
+            "goal": "Make Iron Pickaxe (Iron Pickaxe=1)",
+            "recipe": "https://i.postimg.cc/DwbhL3Ww/Andesite.png",
+            "count": 7,
+            "Iron Pickaxe Station": 1,
+            "Stick Station": 1,
+            "Wood Plank Station": 1,
+            "Tree": 1,
+            "Axe": 1,
+            "Iron Ingot Station": 1,
+            "Iron Ore Vein": 1,
+            "Pickaxe": 1,
+            "Coal Vein": 1
+        },
+        {
+            "goal": "Make Gold Pickaxe (Gold Pickaxe=1)",
+            "recipe": "https://i.postimg.cc/DwbhL3Ww/Andesite.png",
+            "count": 7,
+            "Gold Pickaxe Station": 1,
+            "Stick Station": 1,
+            "Wood Plank Station": 1,
+            "Tree": 1,
+            "Axe": 1,
+            "Gold Ingot Station": 1,
+            "Gold Ore Vein": 1,
+            "Pickaxe": 1,
+            "Coal Vein": 1
+        },
+        {
+            "goal": "Make Brick Pickaxe (Brick Pickaxe=1)",
+            "recipe": "https://i.postimg.cc/DwbhL3Ww/Andesite.png",
+            "count": 5,
+            "Brick Pickaxe Station": 1,
+            "Brick Factory": 1,
+            "Pickaxe": 1,
+            "Stick Station": 1,
+            "Wood Plank Station": 1,
+            "Tree": 1,
+            "Axe": 1
+        },
+        {
+            "goal": "Make Leather Pickaxe (Leather Pickaxe=1)",
+            "recipe": "https://i.postimg.cc/DwbhL3Ww/Andesite.png",
+            "count": 6,
+            "Leather Pickaxe Station": 1,
+            "Leather Station": 1,
+            "Rabbit": 1,
+            "Sword": 1,
+            "Stick Station": 1,
+            "Wood Plank Station": 1,
+            "Tree": 1,
+            "Axe": 1
+        },
+        {
+            "goal": "Make Wood Pickaxe (Wood Pickaxe=1)",
+            "recipe": "https://i.postimg.cc/DwbhL3Ww/Andesite.png",
+            "count": 6,
+            "Wood Pickaxe Station": 1,
+            "Stick Station": 1,
+            "Wood Plank Station": 1,
+            "Tree": 1,
+            "Axe": 1
+        }
+    ],
+    "objects": {
+        "Iron Stairs": "CraftingItem",
+        "Iron Stairs Station": "CraftingContainer",
+        "Iron Ore": "CraftingItem",
+        "Iron Ore Vein": "ResourceFont",
+        "Pickaxe": "CraftingItem",
+        "Gold Stairs": "CraftingItem",
+        "Gold Stairs Station": "CraftingContainer",
+        "Gold Ore": "CraftingItem",
+        "Gold Ore Vein": "ResourceFont",
+        "Diamond Stairs": "CraftingItem",
+        "Diamond Stairs Station": "CraftingContainer",
+        "Diamond": "CraftingItem",
+        "Diamond Ore Vein": "ResourceFont",
+        "Leather Stairs": "CraftingItem",
+        "Leather Stairs Station": "CraftingContainer",
+        "Leather": "CraftingItem",
+        "Leather Station": "CraftingContainer",
+        "Rabbit Hide": "CraftingItem",
+        "Rabbit": "ResourceFont",
+        "Sword": "CraftingItem",
+        "Iron Boots": "CraftingItem",
+        "Iron Boots Station": "CraftingContainer",
+        "Iron Ingot": "CraftingItem",
+        "Iron Ingot Station": "CraftingContainer",
+        "Coal": "CraftingItem",
+        "Coal Vein": "ResourceFont",
+        "Cobblestone Boots": "CraftingItem",
+        "Cobblestone Boots Station": "CraftingContainer",
+        "Cobblestone": "CraftingItem",
+        "Cobblestone Stash": "ResourceFont",
+        "Stone Boots": "CraftingItem",
+        "Stone Boots Station": "CraftingContainer",
+        "Gold Boots": "CraftingItem",
+        "Gold Boots Station": "CraftingContainer",
+        "Gold Ingot": "CraftingItem",
+        "Gold Ingot Station": "CraftingContainer",
+        "Brick Boots": "CraftingItem",
+        "Brick Boots Station": "CraftingContainer",
+        "Brick": "CraftingItem",
+        "Brick Factory": "ResourceFont",
+        "Wood Boots": "CraftingItem",
+        "Wood Boots Station": "CraftingContainer",
+        "Wood Plank": "CraftingItem",
+        "Wood Plank Station": "CraftingContainer",
+        "Wood": "CraftingItem",
+        "Tree": "ResourceFont",
+        "Axe": "CraftingItem",
+        "Iron Pickaxe": "CraftingItem",
+        "Iron Pickaxe Station": "CraftingContainer",
+        "Stick": "CraftingItem",
+        "Stick Station": "CraftingContainer",
+        "Gold Pickaxe": "CraftingItem",
+        "Gold Pickaxe Station": "CraftingContainer",
+        "Brick Pickaxe": "CraftingItem",
+        "Brick Pickaxe Station": "CraftingContainer",
+        "Leather Pickaxe": "CraftingItem",
+        "Leather Pickaxe Station": "CraftingContainer",
+        "Wood Pickaxe": "CraftingItem",
+        "Wood Pickaxe Station": "CraftingContainer",
+        "Cobblestone Ingot": "CraftingItem",
+        "Cobblestone Ingot Station": "CraftingContainer",
+        "Stone Ingot": "CraftingItem",
+        "Stone Ingot Station": "CraftingContainer",
+        "Brick Ingot": "CraftingItem",
+        "Brick Ingot Station": "CraftingContainer",
+        "Diamond Ingot": "CraftingItem",
+        "Diamond Ingot Station": "CraftingContainer",
+        "Leather Ingot": "CraftingItem",
+        "Leather Ingot Station": "CraftingContainer",
+        "Wood Ingot": "CraftingItem",
+        "Wood Ingot Station": "CraftingContainer",
+        "Iron Leggins": "CraftingItem",
+        "Iron Leggins Station": "CraftingContainer",
+        "Cobblestone Leggins": "CraftingItem",
+        "Cobblestone Leggins Station": "CraftingContainer",
+        "Stone Leggins": "CraftingItem",
+        "Stone Leggins Station": "CraftingContainer",
+        "Gold Leggins": "CraftingItem",
+        "Gold Leggins Station": "CraftingContainer",
+        "Brick Leggins": "CraftingItem",
+        "Brick Leggins Station": "CraftingContainer",
+        "Diamond Leggins": "CraftingItem",
+        "Diamond Leggins Station": "CraftingContainer",
+        "Wood Leggins": "CraftingItem",
+        "Wood Leggins Station": "CraftingContainer",
+        "Iron Door": "CraftingItem",
+        "Iron Door Station": "CraftingContainer",
+        "Cobblestone Door": "CraftingItem",
+        "Cobblestone Door Station": "CraftingContainer",
+        "Stone Door": "CraftingItem",
+        "Stone Door Station": "CraftingContainer",
+        "Gold Door": "CraftingItem",
+        "Gold Door Station": "CraftingContainer",
+        "Brick Door": "CraftingItem",
+        "Brick Door Station": "CraftingContainer",
+        "Diamond Door": "CraftingItem",
+        "Diamond Door Station": "CraftingContainer",
+        "Leather Door": "CraftingItem",
+        "Leather Door Station": "CraftingContainer",
+        "Iron Chestplate": "CraftingItem",
+        "Iron Chestplate Station": "CraftingContainer",
+        "Cobblestone Chestplate": "CraftingItem",
+        "Cobblestone Chestplate Station": "CraftingContainer",
+        "Stone Chestplate": "CraftingItem",
+        "Stone Chestplate Station": "CraftingContainer",
+        "Gold Chestplate": "CraftingItem",
+        "Gold Chestplate Station": "CraftingContainer",
+        "Brick Chestplate": "CraftingItem",
+        "Brick Chestplate Station": "CraftingContainer",
+        "Diamond Chestplate": "CraftingItem",
+        "Diamond Chestplate Station": "CraftingContainer",
+        "Wood Chestplate": "CraftingItem",
+        "Wood Chestplate Station": "CraftingContainer",
+        "Iron Helmet": "CraftingItem",
+        "Iron Helmet Station": "CraftingContainer",
+        "Cobblestone Helmet": "CraftingItem",
+        "Cobblestone Helmet Station": "CraftingContainer",
+        "Stone Helmet": "CraftingItem",
+        "Stone Helmet Station": "CraftingContainer",
+        "Gold Helmet": "CraftingItem",
+        "Gold Helmet Station": "CraftingContainer",
+        "Brick Helmet": "CraftingItem",
+        "Brick Helmet Station": "CraftingContainer",
+        "Diamond Helmet": "CraftingItem",
+        "Diamond Helmet Station": "CraftingContainer",
+        "Wood Helmet": "CraftingItem",
+        "Wood Helmet Station": "CraftingContainer"
+    }
+}

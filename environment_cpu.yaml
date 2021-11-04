@@ -1,0 +1,21 @@
+name: language_prediction
+channels:
+    - pytorch
+dependencies:
+    - pytorch=1.9.0
+    - torchvision
+    - torchtext
+    - cpuonly
+    - numpy
+    - matplotlib
+    - seaborn
+    - pandas
+    - imageio
+    - pyyaml
+    - opencv
+    - tensorboard
+    - pip
+    - pip:
+        - gym
+        - git+https://github.com/maximecb/gym-minigrid.git
+        

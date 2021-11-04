@@ -1,0 +1,42 @@
+## Config for experiments
+
+env: BabyAI-BossLevel-v0
+wrapper: LanguageWrapper
+wrapper_kwargs:
+  max_len: 42
+  pad: true
+
+time_limit: 450
+
+alg: BehaviorCloning
+alg_kwargs:
+  dataset: datasets/
+  validation_dataset: datasets/
+  dataset_fraction: 1.0
+  batch_size: 32
+  optim_kwargs:
+    lr: 0.0001
+    eps: 0.00000001
+  pretraining: False
+  lang_coeff: 0.7 # Change to run different experiments
+  unsup_coeff: 0.7 # Change to run different experiments
+  unsup_within_seq: False
+  unsup_type: "atc"
+  unsup_ema_tau: 0.01
+  unsup_ema_update_freq: 1
+
+train_kwargs:
+  total_steps: 1000000
+  log_freq: 1000
+  eval_ep: 100
+  eval_freq: 10000
+  validation_metric: accuracy
+
+network: DT
+network_kwargs:
+  n_enc_layer: 4
+  n_dec_layer: 1
+  n_head: 2
+  n_embd: 128
+  mlp_ratio: 2
+  block_size: 512
