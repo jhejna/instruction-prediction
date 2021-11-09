@@ -2,6 +2,7 @@
 output/
 datasets/
 !language_prediction/datasets
+!mazebase/mazebasev2/lib
 .vector_cache
 
 # Byte-compiled / optimized / DLL files

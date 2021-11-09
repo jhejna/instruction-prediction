@@ -190,7 +190,7 @@ class MazebaseGame(gym.Env):
         yaml_file =  os.path.join(mazebase_dir, "options/knowledge_planner/" + config + '.yaml')
 
         with open(yaml_file, 'r') as handle:
-            options = yaml.load(handle)
+            options = yaml.load(handle, Loader=yaml.Loader)
 
         # Get sub opts
         method_opt = options['method']

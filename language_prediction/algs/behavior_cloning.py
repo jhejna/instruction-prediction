@@ -7,6 +7,10 @@ from language_prediction.utils.logger import Logger
 from language_prediction.utils.evaluate import eval_policy
 from language_prediction.utils.utils import to_tensor, to_device, unsqueeze
 
+# Env imports for type checking
+from language_prediction.envs.mazebase import MazebaseGame
+from gym_minigrid.minigrid import MiniGridEnv
+
 import language_prediction
 from functools import partial
 from collections import defaultdict
@@ -30,18 +34,6 @@ def compute_curl_loss(anchor, target, proj_mat, actions):
 def ema_parameters(net, target_net, tau):
     for param, target_param in zip(net.parameters(), target_net.parameters()):
         target_param.data.copy_(tau * param.data + (1-tau) * target_param.data)
-
-def log_from_dict(logger, loss_lists, prefix):
-    keys_to_remove = []
-    for loss_name, loss_value in loss_lists.items():
-        if isinstance(loss_value, list) and len(loss_value) > 0:
-            logger.record(prefix + "/" + loss_name, np.mean(loss_value))
-            keys_to_remove.append(loss_name)
-        else:
-            logger.record(prefix + "/" + loss_name, loss_value)
-            keys_to_remove.append(loss_name)
-    for key in keys_to_remove:
-        del loss_lists[key]
 
 class BehaviorCloning(object):
 
@@ -81,7 +73,7 @@ class BehaviorCloning(object):
         self.dataset_fraction = dataset_fraction
 
         network_args = [num_actions]
-        if isinstance(self.env.unwrapped, language_prediction.envs.mazebase.MazebaseGame):
+        if isinstance(self.env.unwrapped, MazebaseGame):
             # Now we have to create the vocab here.
             import pickle
             with open(self.dataset +'all_instructions', 'rb') as f:
@@ -98,8 +90,8 @@ class BehaviorCloning(object):
         if checkpoint:
             self.load(checkpoint, strict=True)
         
-        self.action_criterion = torch.nn.CrossEntropyLoss(ignore_index=network.action_pad_idx)
-        self.instruction_criterion = torch.nn.CrossEntropyLoss(ignore_index=network.lang_pad_idx)
+        self.action_criterion = torch.nn.CrossEntropyLoss(ignore_index=self.network.action_pad_idx)
+        self.instruction_criterion = torch.nn.CrossEntropyLoss(ignore_index=self.network.lang_pad_idx)
 
         if self.unsup_coeff > 0.0: 
             # create the target networks because we are in the unsupervised case.
@@ -143,14 +135,18 @@ class BehaviorCloning(object):
         actions = to_device(actions, self.device).long()
 
         # Remove language inputs for a speedup if we don't need it.
-        instruction_inputs = obs['label'][:, :-1] if 'label' in obs and self.lang_coeff > 0 else None
-        instruction_labels = obs['label'][:, 1:] if 'label' in obs and self.lang_coeff > 0 else None
-
+        if self.lang_coeff > 0:
+            instruction_inputs, instruction_labels = obs['label'][:, :-1], obs['label'][:, 1:]
+            if 'mask' in obs: # Make sure to crop the mask as well.
+                obs['mask'] = obs['mask'][:, :-1]
+        else:
+            instruction_inputs, instruction_labels = None, None
+        
         action_logits, lang_logits, anchor_logits = self.network(obs, instructions=instruction_inputs, is_target=False)
         
         if self.unsup_coeff > 0: # Note that we run unsupervised losses first to avoid action reshaping issues.
             with torch.no_grad():
-                _, _, target_logits = self.ema_network(obs, labels=None, is_target=True)
+                _, _, target_logits = self.ema_network(obs, instructions=None, is_target=True)
             unsup_loss = compute_curl_loss(anchor_logits, target_logits, self.network.unsup_proj, actions)
         else:
             unsup_loss = 0
@@ -185,19 +181,19 @@ class BehaviorCloning(object):
         return total_loss, metrics
         
 
-    def train(self, path, total_steps, log_freq=100, eval_freq=5000, eval_ep=0, validation_metric="loss", use_eval_mode=True):        
+    def train(self, path, total_steps, log_freq=100, eval_freq=5000, eval_ep=0, validation_metric="loss", use_eval_mode=True, workers=4):        
         logger = Logger(path=path)
 
-        print("[Lang RL] Training a model with tunable parameters", sum(p.numel() for p in self.network.parameters() if p.requires_grad))
+        print("[Lang IL] Training a model with tunable parameters", sum(p.numel() for p in self.network.parameters() if p.requires_grad))
         # Setup for the different ind
 
-        if isinstance(self.env.unwrapped, None):
-            from language_prediction.datasets.babayai_dataset import BabyAITrajectoryDataset, traj_collate_fn
+        if isinstance(self.env.unwrapped, MiniGridEnv): # 
+            from language_prediction.datasets.babyai_dataset import BabyAITrajectoryDataset, traj_collate_fn
             collate_fn = traj_collate_fn
-            dataset = BabyAITrajectoryDataset.load(self.dataset, fraction=self.dataset_fraction)
+            dataset = BabyAITrajectoryDataset.load(self.dataset, dataset_fraction=self.dataset_fraction)
             if not self.validation_dataset is None:
-                validation_dataset = BabyAITrajectoryDataset.load(self.validation_dataset)
-        elif isinstance(self.env.unwrapped, language_prediction.envs.mazebase.MazebaseGame):
+                validation_dataset = BabyAITrajectoryDataset.load(self.validation_dataset, dataset_fraction=1.0)
+        elif isinstance(self.env.unwrapped, MazebaseGame):
             from language_prediction.datasets import crafting_dataset
             skip = 1 if self.unsup_coeff > 0.0 else -1
             dataset = crafting_dataset.CraftingDataset(self.dataset, self.vocab, dataset_fraction=self.dataset_fraction, skip=skip) # Must have created the vocab. Note that it was already given to the agent.
@@ -207,7 +203,7 @@ class BehaviorCloning(object):
         else:
             raise ValueError("Unknown environment type passed in.")
 
-        dataloader = torch.utils.data.DataLoader(dataset, batch_size=self.batch_size, shuffle=True, num_workers=4, pin_memory=True, collate_fn=collate_fn)
+        dataloader = torch.utils.data.DataLoader(dataset, batch_size=self.batch_size, shuffle=True, num_workers=workers, pin_memory=True, collate_fn=collate_fn)
         if not self.validation_dataset is None:
             validation_dataloader = torch.utils.data.DataLoader(validation_dataset, batch_size=self.batch_size, shuffle=False, collate_fn=collate_fn)
 
@@ -230,7 +226,7 @@ class BehaviorCloning(object):
                     torch.nn.utils.clip_grad_norm_(self.network.parameters(), self.grad_norm)
                 self.optim.step()
                 for metric_name, metric_value in metrics.items():
-                    loss_lists[metric_name].append(metrics)
+                    loss_lists[metric_name].append(metrics[metric_name])
                 step += 1
 
                 if self.unsup_coeff > 0.0 and step % self.unsup_ema_update_freq == 0:
@@ -239,7 +235,7 @@ class BehaviorCloning(object):
                 # Run the train logging
                 if step % log_freq == 0:
                     current_time = time.time()
-                    log_from_dict(logger, loss_lists, "train")
+                    logger.log_from_dict(loss_lists, "train")
                     logger.record("time/epochs", num_epochs)
                     logger.record("time/steps_per_seceonds", log_freq / (time.time() - start_time))
                     start_time = current_time
@@ -252,21 +248,13 @@ class BehaviorCloning(object):
 
                     if eval_ep > 0 and not self.env is None:
                         with torch.no_grad():
-                            mean_reward, std_reward, mean_length, success_rate = eval_policy(self.env, self, eval_ep)
-                        logger.record("env/mean_reward", mean_reward)
-                        logger.record("env/reward_std", std_reward)
-                        logger.record("env/mean_length", mean_length)
-                        logger.record("env/success_rate", success_rate)
-                        non_empty_dump = True
+                            metrics = eval_policy(self.env, self, eval_ep)
+                        logger.log_from_dict(metrics, "env")
 
                     if eval_ep > 0 and not self.eval_env is None:
                         with torch.no_grad():
-                            mean_reward, std_reward, mean_length, success_rate = eval_policy(self.eval_env, self, eval_ep)
-                        logger.record("eval_env/mean_reward", mean_reward)
-                        logger.record("eval_env/reward_std", std_reward)
-                        logger.record("eval_env/mean_length", mean_length)
-                        logger.record("eval_env/success_rate", success_rate)
-                        non_empty_dump = True
+                            metrics = eval_policy(self.eval_env, self, eval_ep)
+                        logger.log_from_dict(metrics, "eval_env")
                     
                     if self.validation_dataset:
                         validation_loss_lists = defaultdict(list)
@@ -274,12 +262,12 @@ class BehaviorCloning(object):
                             for valid_obs, valid_ac in validation_dataloader:
                                 _, metrics = self._compute_loss(valid_obs, valid_ac)
                                 for metric_name, metric_value in metrics.items():
-                                    validation_loss_lists[metric_name].append(metrics)
+                                    validation_loss_lists[metric_name].append(metrics[metric_name])
 
                         current_validation_metric = np.mean(validation_loss_lists[validation_metric])
                         if current_validation_metric < best_validation_metric:
                             self.save(path, "best_model")
-                        log_from_dict(logger, validation_loss_lists, "valid")
+                        logger.log_from_dict(validation_loss_lists, "valid")
                     
                     # Every eval period also save the "final model"
                     logger.dump(step=step)

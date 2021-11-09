@@ -1,4 +1,4 @@
-from .babyai_wrappers import FullyObsLanguageWrapper, LanguageWrapper
+from .babyai_wrappers import LanguageWrapper
 
 # Register the mazebase env
 from gym.envs.registration import register

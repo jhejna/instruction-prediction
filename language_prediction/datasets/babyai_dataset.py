@@ -69,12 +69,12 @@ class BabyAITrajectoryDataset(Dataset):
             pickle.dump(dataset, f)
         
     @classmethod
-    def load(cls, path, fraction=1):
+    def load(cls, path, dataset_fraction=1):
         with open(path, 'rb') as f:
             dataset = pickle.load(f)
-        if fraction < 1.0:
+        if dataset_fraction < 1.0:
             # Load only a fraction of the dataset
-            num_data_pts = int(fraction*len(dataset['images']))
+            num_data_pts = int(dataset_fraction*len(dataset['images']))
             dataset = {k:v[:num_data_pts] for k,v in dataset.items() if not v is None}
         if not 'next_images' in dataset:
             dataset['next_images'] = None # short hack

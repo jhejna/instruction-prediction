@@ -67,7 +67,7 @@ def main():
     # Set options
     if args.path_opt is not None:
         with open(args.path_opt, 'r') as handle:
-            options = yaml.load(handle)
+            options = yaml.load(handle, Loader=yaml.Loader)
     print('## args'); pprint(vars(args))
     print('## options'); pprint(options)
 

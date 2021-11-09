@@ -368,7 +368,7 @@ class ViT(nn.Module):
         if decoder_depth > 0:
             self.decoder = ViTDecoder(self.num_img_tokens, embed_dim=self.embed_dim, depth=decoder_depth, num_heads=num_heads, 
                                        mlp_ratio=mlp_ratio, qkv_bias=qkv_bias, drop_rate=drop_rate, attn_drop_rate=attn_drop_rate, drop_path_rate=drop_path_rate)
-            self.vocab_head = nn.Linear(embed_dim, self.vocab_size, bias=False)
+            self.vocab_head = nn.Linear(embed_dim, self.vocab_size - 1, bias=False)
         else:
             self.decoder = None
 
@@ -376,55 +376,55 @@ class ViT(nn.Module):
 
         if unsup_dim > 0:
             self._unsup_proj = nn.Parameter(torch.rand(unsup_dim, unsup_dim))
-            self.unsup_head = nn.Linear(n_embd, unsup_dim)
+            self.unsup_head = nn.Linear(self.embed_dim, unsup_dim)
             self.unsup_mlp = nn.Sequential(nn.Linear(unsup_dim, 2*unsup_dim), nn.ReLU(), nn.Linear(2*unsup_dim, unsup_dim)) # Forward MLP for ATC.
         else:
             self._unsup_proj = None
             self.unsup_head = None
             self.unsup_mlp = None
 
-        @property
-        def unsup_proj(self):
-            # Property return for use in the training alg.
-            return self._unsup_proj
+    @property
+    def unsup_proj(self):
+        # Property return for use in the training alg.
+        return self._unsup_proj
 
-        @property
-        def get_action_pad_idx(self):
-            return -100
+    @property
+    def action_pad_idx(self):
+        return -100
+    
+    @property
+    def lang_pad_idx(self):
+        return self.vocab_size - 1 # A consequence of the Crafting Dataset implementation.
+
+    def forward(self, obs, instructions=None, is_target=False):
+        grid_embedding = obs['next_grid_embedding'] if is_target else obs['grid_embedding']
+        grid_onehot = obs['next_grid_onehot'] if is_target else obs['grid_onehot']
+        inventory = obs['next_inventory'] if is_target else obs['inventory']
+        goal = obs['next_goal'] if is_target else obs['goal']
+        x = self.state_encoder(grid_embedding, grid_onehot, inventory, goal)
+        assert x.shape[1] == self.num_img_tokens, "Num img tokens did not match encoder out"
+        if self.embed_dim != self.glove_embed_dim:
+            x = self.downsample(x) # Downsample the embeddings
         
-        @property
-        def get_lang_pad_idx(self):
-            return self.vocab_size - 1 # A consequence of the Crafting Dataset implementation.
+        x = self.encoder(x)
+        action_logits = self.action_head(x[:, 0]) # Grab the first in the sequence
 
-        def forward(self, obs, instructions=None, is_target=False):
-            grid_embedding = obs['next_grid_embedding'] if is_target else obs['grid_embedding']
-            grid_onehot = obs['next_grid_onehot'] if is_target else obs['grid_onehot']
-            inventory = obs['next_inventory'] if is_target else obs['inventory']
-            goal = obs['next_goal'] if is_target else obs['goal']
-            x = self.state_encoder(grid_embedding, grid_onehot, inventory, goal)
-            assert x.shape[1] == self.num_img_tokens, "Num img tokens did not match encoder out"
+        if instructions is not None and self.decoder is not None:
+            # run instruction prediction
+            target = self.embedding(instructions)
             if self.embed_dim != self.glove_embed_dim:
-                x = self.downsample(x) # Downsample the embeddings
-            
-            x = self.encoder(x)
-            action_logits = self.action_head(x[:, 0]) # Grab the first in the sequence
-
-            if instructions is not None and self.decoder is not None:
-                # run instruction prediction
-                target = self.embedding(instructions)
-                if self.embed_dim != self.glove_embed_dim:
-                    target = self.downsample(target) # Downsample the embeddings
-                lang_logits = self.decoder(target, x, mask=None)
-            else:
-                lang_logits = None
-            
-            if self.unsup_head is not None:
-                # Run unsupervised prediction
-                unsup_logits = self.unsup_head(x[:, 0]) # Grab the CLS Token
-                if not is_target:
-                    unsup_logits = self.unsup_mlp(unsup_logits) # Forward through the projection MLP
-            else:
-                unsup_logits = None
-            
-            return action_logits, lang_logits, unsup_logits # For unsupervised losses to be used later perhaps
+                target = self.downsample(target) # Downsample the embeddings
+            lang_logits = self.vocab_head(self.decoder(target, x, mask=None))
+        else:
+            lang_logits = None
+        
+        if self.unsup_head is not None:
+            # Run unsupervised prediction
+            unsup_logits = self.unsup_head(x[:, 0]) # Grab the CLS Token
+            if not is_target:
+                unsup_logits = self.unsup_mlp(unsup_logits) # Forward through the projection MLP
+        else:
+            unsup_logits = None
+        
+        return action_logits, lang_logits, unsup_logits # For unsupervised losses to be used later perhaps
 

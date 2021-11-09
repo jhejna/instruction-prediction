@@ -1,6 +1,7 @@
 import os
 import csv
 from torch.utils.tensorboard import SummaryWriter
+import numpy as np
 
 class Logger(object):
 
@@ -28,3 +29,18 @@ class Logger(object):
                 self.csv_logger.writeheader()
             self.csv_logger.writerow(self.csv_values)
             self.csv_file_handler.flush()
+
+    def log_from_dict(self, metrics, prefix):
+        '''
+        This function records data from an input dict, and removes the keys from the dict once they have been logged.
+        '''
+        keys_to_remove = []
+        for loss_name, loss_value in metrics.items():
+            log_name = prefix + "/" + loss_name
+            if isinstance(loss_value, list) and len(loss_value) > 0:
+                self.record(log_name, np.mean(loss_value))
+            else:
+                self.record(log_name, loss_value)
+            keys_to_remove.append(loss_name)
+        for key in keys_to_remove:
+            del metrics[key]
