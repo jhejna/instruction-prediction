@@ -208,8 +208,7 @@ def collate_fn(data, vocab_size=217):
         end = lengths[i]
         subgoals[i, :end] = data_pt[0]['subgoal'][:end] # grab just the end.
     
-    obs['subgoal'] = subgoals
-    obs['label'] = subgoals[:, 1:]
+    obs['label'] = subgoals
     obs['decode_lengths'] = [length - 1 for length in lengths]
     # Finally, do the actions
     actions = torch.cat([data_pt[1] for data_pt in data], 0)

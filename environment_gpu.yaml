@@ -18,3 +18,4 @@ dependencies:
     - pip:
         - gym
         - git+https://github.com/maximecb/gym-minigrid.git
+        - pyspellchecker
