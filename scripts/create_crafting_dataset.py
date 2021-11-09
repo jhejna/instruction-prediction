@@ -18,7 +18,7 @@ parser.add_argument("--input-path", "-p", type=str, required=True, help="Path to
 parser.add_argument("--output-path", "-o", type=str, required=True, help="Path to the data.")
 args = parser.parse_args()
 
-PATH_TO_FULL_DATA = args.path 
+PATH_TO_FULL_DATA = args.input_path 
 
 SUBGOAL_DIVIDE_TOKEN = "<subgoal>"
 
@@ -150,7 +150,7 @@ def read_dataset(save_path, all_future_instrs=False):
     inventories = np.array(inventories)
     actions = np.array(actions)
     goals = np.array(goals)
-    instructions = np.array(instructions)
+    instructions = np.array(instructions, dtype=object)
 
     print("**dataset loaded**")
 
@@ -188,10 +188,10 @@ def read_dataset(save_path, all_future_instrs=False):
     valid_save_path = save_path + "_valid"
     if not os.path.exists(valid_save_path):
         os.makedirs(valid_save_path)
-    valid_save_path = os.path.join(save_path, "dataset_")
+    valid_save_path = os.path.join(valid_save_path, "dataset_")
     if valid_save_path.endswith('/'):
         valid_save_path = valid_save_path[:-1]
-    
+
     with open(valid_save_path + 'states', 'wb') as f:
         pickle.dump(states[-num_valid_pts:], f)
 

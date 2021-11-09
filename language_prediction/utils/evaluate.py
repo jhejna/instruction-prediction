@@ -47,4 +47,5 @@ def eval_policy(env, model, num_ep, seed=None, mask=None):
         ep_rewards.append(ep_reward)
         ep_lengths.append(ep_length)
 
-    return np.mean(ep_rewards), np.std(ep_rewards), np.mean(ep_lengths), num_successes / num_ep
+    return dict(reward=np.mean(ep_rewards), stddev=np.std(ep_rewards), length=np.mean(ep_lengths), success_rate=num_successes/num_ep)
+    

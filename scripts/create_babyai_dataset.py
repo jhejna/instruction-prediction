@@ -2,7 +2,7 @@ import os
 import argparse
 import subprocess
 
-from language_prediction.datasets.datasets import BabyAITrajectoryDataset
+from language_prediction.datasets.babyai_dataset import BabyAITrajectoryDataset
 
 parser = argparse.ArgumentParser()
 parser.add_argument("--env", type=str, required=True, help="name of the env.")

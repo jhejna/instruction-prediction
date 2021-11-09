@@ -1,7 +1,7 @@
 import babyai
 import gym
 from babyai.bot import GoNextToSubgoal, PickupSubgoal, DropSubgoal, OpenSubgoal, LanguageObj
-from babyai.utils.agent import FullyObsBotAgent, BotAgent
+from babyai.utils.agent import BotAgent
 
 import numpy as np
 import time
@@ -10,7 +10,7 @@ from collections import defaultdict
 import itertools
 
 from language_prediction.envs.babyai_wrappers import WORD_TO_IDX, LanguageWrapper
-from .datasets import BabyAITrajectoryDataset
+from .babyai_dataset import BabyAITrajectoryDataset
 
 logger = logging.getLogger(__name__)
 logging.basicConfig(level='INFO', format="%(asctime)s: %(levelname)s: %(message)s")
@@ -136,11 +136,10 @@ def process_subgoals(subgoals, aggressive_mask=False):
         cur_subgoal_index = min(cur_subgoal_index, len(subgoals) - 1)
     
     # Grab and the convert the text
-    print(len(new_subgoal_index) / len(subgoals))
     subgoals_per_timestep = []
     for ind in new_subgoal_index:
         text = [subgoal.text for subgoal in subgoals[ind:]]
-        s_t = FullyObsLanguageWrapper.convert_subgoals_to_data(text, max_len=-1, pad=False)
+        s_t = LanguageWrapper.convert_subgoals_to_data(text, max_len=-1, pad=False)
         subgoals_per_timestep.append(s_t)
 
     # Get the total length of the text for all the subgoals. This is in the first subgoal for timestep

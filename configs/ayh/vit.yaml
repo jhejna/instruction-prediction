@@ -9,9 +9,9 @@ eval_env_kwargs:
 
 alg: BehaviorCloning
 alg_kwargs:
-  dataset: /shared/jhejna/ask-your-human/new_data/dataset_
-  validation_dataset: /shared/jhejna/ask-your-human/valid_new_data/dataset_
-  dataset_fraction: 1.0
+  dataset: datasets/crafting/dataset_
+  validation_dataset: datasets/crafting_valid/dataset_
+  dataset_fraction: 0.4 # Default example uses only 40% of the data, where we got the best results!
   batch_size: 64
   optim_cls: ["import", "torch.optim", "AdamW"]
   optim_kwargs:
@@ -19,7 +19,7 @@ alg_kwargs:
     eps: 0.00000001
     weight_decay: 0.05
   grad_norm: 1.0
-  pretraining: False
+  action_coeff: 1.0
   lang_coeff: 0.25
   unsup_coeff: 0.25
   unsup_ema_tau: 0.01
@@ -28,7 +28,7 @@ alg_kwargs:
 train_kwargs:
   total_steps: 325000
   log_freq: 100
-  eval_ep: 200
+  eval_ep: 100
   eval_freq: 2000
   validation_metric: accuracy
   use_eval_mode: False
@@ -40,7 +40,7 @@ network_kwargs:
   embed_dim: 128
   unsup_dim: 128
   mlp_ratio: 2
-  decoder_layers: 1
+  decoder_depth: 1
   drop_rate: 0.1
   attn_drop_rate: 0.1
   drop_path_rate: 0.1
