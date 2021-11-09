@@ -1,8 +1,21 @@
-# Paper Title
+# Improving Long-Horizon Imitation Through Language Prediction
 
-This is the official code repository for *paper title* by ...
+This is the official code repository for *Improving Long-Horizon Imitation Through Language Prediction* by [Donald (Joey) Hejna](https://jhejna.github.io), [Pieter Abbeel](https://people.eecs.berkeley.edu/~pabbeel/), and [Lerrel Pinto](https://www.lerrelpinto.com/).
 
-This repository includes easy to use code to reproduce the main results of the paper.
+This repository includes easy to use code to reproduce the main results of the paper, which can be found [here](https://openreview.net/pdf?id=1Z3h4rCLvo-).
+
+If you use this repository, please cite our work:
+```
+@inproceedings{
+anonymous2022improving,
+title={Improving Long-Horizon Imitation Through Language Prediction},
+author={Anonymous},
+booktitle={Submitted to The Tenth International Conference on Learning Representations },
+year={2022},
+url={https://openreview.net/forum?id=1Z3h4rCLvo-},
+note={under review}
+}
+```
 
 ## Installation
 All commands assume the user is in the repository directory.
@@ -61,4 +74,3 @@ Here is the evaluation command for Crafting on only unseen three-step levels. A 
 ```
 python scripts/test.py --path path/to/model --best --num-ep 500 --override env_kwargs.config unseen_3only
 ```
-
