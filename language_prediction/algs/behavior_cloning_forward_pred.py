@@ -159,7 +159,7 @@ class BehaviorCloningForwardPrediction(object):
             metrics['action_loss'] = action_loss.item()
             with torch.no_grad(): # Also compute the accuracy
                 action_pred = torch.argmax(action_logits, dim=-1)
-                mask = actions == self.network.action_pad_idx
+                mask = actions != self.network.action_pad_idx
                 accuracy = ((action_pred == actions) * mask).sum().item() / mask.sum().item()
                 metrics['action_accuracy'] = accuracy
         else:
@@ -173,7 +173,7 @@ class BehaviorCloningForwardPrediction(object):
             metrics['forward_loss'] = forward_loss.item()
             with torch.no_grad(): # Also compute the accuracy
                 forward_pred = torch.argmax(forward_logits, dim=-1)
-                mask = forward_labels == self.network.action_pad_idx
+                mask = forward_labels != self.network.action_pad_idx
                 accuracy = ((forward_pred == forward_labels) * mask).sum().item() / mask.sum().item()
                 metrics['forward_accuracy'] = accuracy
         else:
@@ -276,8 +276,10 @@ class BehaviorCloningForwardPrediction(object):
                             self.save(path, "best_model")
                         logger.log_from_dict(validation_loss_lists, "valid")
                     
-                    # Every eval period also save the "final model"
+                    # Put the network back into train
+                    self.network.train()
                     logger.dump(step=step)
+                    # Every eval period also save the "final model"
                     self.save(path, "final_model")
 
                 if step >= total_steps:
