@@ -28,7 +28,7 @@ train_kwargs:
   log_freq: 100
   eval_ep: 50 # Run 50 evaluation episodes.
   eval_freq: 5000
-  validation_metric: accuracy
+  validation_metric: action_accuracy
 
 network: DT
 network_kwargs:
