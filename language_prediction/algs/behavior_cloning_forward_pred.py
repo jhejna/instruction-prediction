@@ -276,8 +276,10 @@ class BehaviorCloningForwardPrediction(object):
                             self.save(path, "best_model")
                         logger.log_from_dict(validation_loss_lists, "valid")
                     
-                    # Every eval period also save the "final model"
+                    # Put the network back into train
+                    self.network.train()
                     logger.dump(step=step)
+                    # Every eval period also save the "final model"
                     self.save(path, "final_model")
 
                 if step >= total_steps:
