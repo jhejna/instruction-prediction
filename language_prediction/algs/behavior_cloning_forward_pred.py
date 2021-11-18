@@ -187,7 +187,7 @@ class BehaviorCloningForwardPrediction(object):
         return total_loss, metrics
         
 
-    def train(self, path, total_steps, log_freq=100, eval_freq=5000, eval_ep=0, validation_metric="loss", use_eval_mode=True, workers=4):        
+    def train(self, path, total_steps, log_freq=100, eval_freq=5000, eval_ep=0, validation_metric="action_loss", use_eval_mode=True, workers=4):        
         logger = Logger(path=path)
 
         print("[Lang IL] Training a model with tunable parameters", sum(p.numel() for p in self.network.parameters() if p.requires_grad))
