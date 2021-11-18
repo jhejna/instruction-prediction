@@ -284,3 +284,125 @@ class DT(nn.Module):
         action_logits = action_logits[0, -1, :]
         action = torch.argmax(action_logits).item()
         return action # return the predicted action.
+
+
+class DTForward(nn.Module):
+    '''
+    Decision Transformer with extra modeling components for language and unsupervised learning.
+    '''
+
+    def __init__(self, num_actions, 
+                       n_head=2, n_embd=128, attn_pdrop=0.1, resid_pdrop=0.1, embd_pdrop=0.1, block_size=384, mlp_ratio=2, # Attention Params
+                       vocab_size=40, n_layer=4, n_dec_layer=1, # Enc/Dec Params
+                       unsup_dim=128, reuse_action_head=False): # Unsup params
+        super().__init__()
+
+        self.cnn = BabyAIFeatureExtractor(n_embd)
+        self.text_emb = nn.Embedding(vocab_size, n_embd, padding_idx=0) # TODO: import padding idx
+        self.encoder = GPTEncoder(n_head=n_head, n_embd=n_embd, attn_pdrop=attn_pdrop, resid_pdrop=resid_pdrop, embd_pdrop=embd_pdrop, 
+                                  block_size=block_size, mlp_ratio=mlp_ratio, n_layer=n_layer)
+        self.action_head = nn.Linear(n_embd, num_actions)
+        self.num_actions = num_actions
+
+        # Decoder
+        if n_dec_layer > 0:
+            self.action_emb = nn.Embedding(num_actions + 1, n_embd, padding_idx=num_actions)
+            self.decoder = Seq2SeqDecoder(n_head=n_head, n_embd=n_embd, attn_pdrop=attn_pdrop, resid_pdrop=resid_pdrop, embd_pdrop=embd_pdrop, 
+                                          block_size=block_size, mlp_ratio=mlp_ratio, n_layer=n_dec_layer)
+            if reuse_action_head:
+                self.decoder_action_head = self.action_head
+            else:
+                self.decoder_action_head = nn.Linear(n_embd, num_actions)
+        else:
+            self.decoder = None
+
+        # Init params before creating unsup head, which is initialized with pytorch default
+        self.apply(self._init_weights)
+
+        # Unsupervised Head
+        if unsup_dim > 0:
+            self._unsup_proj = nn.Parameter(torch.rand(unsup_dim, unsup_dim))
+            self.unsup_head = nn.Linear(n_embd, unsup_dim)
+            self.unsup_mlp = nn.Sequential(nn.Linear(unsup_dim, 2*unsup_dim), nn.ReLU(), nn.Linear(2*unsup_dim, unsup_dim)) # Forward MLP for ATC.
+        else:
+            self._unsup_proj = None
+            self.unsup_head = None
+            self.unsup_mlp = None
+        
+    @property
+    def unsup_proj(self):
+        # Property return for use in the training alg.
+        return self._unsup_proj
+
+    @property
+    def action_pad_idx(self):
+        return -100
+    
+    @property
+    def lang_pad_idx(self):
+        return WORD_TO_IDX['PAD']
+
+    def _init_weights(self, module):
+        if isinstance(module, (nn.Linear, nn.Embedding)):
+            module.weight.data.normal_(mean=0.0, std=0.02)
+            if isinstance(module, nn.Linear) and module.bias is not None:
+                module.bias.data.zero_()
+        elif isinstance(module, nn.LayerNorm):
+            module.bias.data.zero_()
+            module.weight.data.fill_(1.0)
+
+    def forward(self, obs, forward_inputs=None, is_target=False):
+        '''
+        obs: observation, expected to be dict with keys: image, mission, and optionally mask.
+        labels: this contains the langauge instructions.
+        is_target: whether or not this is the target network. Used to swap image with next_image
+        '''
+        img = obs['next_image'] if is_target else obs['image']
+        mission = obs['mission']
+        mask = obs['mask'] if 'mask' in obs else None
+
+        img = self.cnn(img.float())
+        mission = self.text_emb(mission)
+        x = torch.cat((mission, img), dim=1)
+        x = self.encoder(x)
+        action_logits = self.action_head(x[:, mission.shape[1]:, :])
+
+        if forward_inputs is not None and self.decoder is not None:
+            # We run language prediction, but first we need to append to the mask according to the mission length.
+            B, S, _ = img.shape
+            T = forward_inputs.shape[1]
+            skip = int(S/T)
+            with torch.no_grad():
+                mask = torch.zeros(B, T, S, device=mission.device, dtype=torch.bool)
+                for i in range(T):
+                    mask[:, i, 1+skip*i] = True
+                mission_mask = torch.ones(B, T, mission.shape[1], device=mission.device, dtype=torch.bool)
+                mask = torch.cat((mission_mask, mask), dim=2)
+            forward_inputs = forward_inputs.clone()
+            forward_inputs[forward_inputs == -100] = self.num_actions
+            target = self.action_emb(forward_inputs)
+            forward_logits = self.decoder_action_head(self.decoder(target, x, mask=mask))
+        else:
+            forward_logits = None
+
+        if self.unsup_head is not None:
+            # Run unsupervised prediction
+            unsup_logits = self.unsup_head(x[:, mission.shape[1]:, :]) # Must remove the mission latents
+            if not is_target:
+                unsup_logits = self.unsup_mlp(unsup_logits) # Forward through the projection MLP if non-target as in ATC.
+        else:
+            unsup_logits = None
+
+        return action_logits, forward_logits, unsup_logits
+
+    def predict(self, obs, deterministic=True, history=None):
+        assert not history is None
+        assert history['image'].shape[0] == 1, "Only a batch size of 1 is currently supported"
+        # Run the model on the observation
+        # We only want to send in the mission once. Can use the current timestep one.
+        combined_obs = {'image': history['image'], 'mission': obs['mission']}
+        action_logits, _, _ = self(combined_obs, instructions=None, is_target=False)
+        # We only care about the last timestep action logits
+        action_logits = action_logits[0, -1, :]
+        action = torch.argmax(action_logits).item()
+        return action # return the predicted action.

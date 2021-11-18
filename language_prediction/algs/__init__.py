@@ -1,1 +1,2 @@
 from .behavior_cloning import BehaviorCloning
+from .behavior_cloning_forward_pred import BehaviorCloningForwardPrediction
