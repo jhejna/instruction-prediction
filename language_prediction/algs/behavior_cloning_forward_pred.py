@@ -159,8 +159,9 @@ class BehaviorCloningForwardPrediction(object):
             metrics['action_loss'] = action_loss.item()
             with torch.no_grad(): # Also compute the accuracy
                 action_pred = torch.argmax(action_logits, dim=-1)
-                accuracy = (action_pred == actions).sum().item() / actions.shape[0]
-                metrics['accuracy'] = accuracy
+                mask = actions == self.network.action_pad_idx
+                accuracy = ((action_pred == actions) * mask).sum().item() / mask.sum().item()
+                metrics['action_accuracy'] = accuracy
         else:
             action_loss = 0
 
@@ -170,6 +171,11 @@ class BehaviorCloningForwardPrediction(object):
                 forward_labels = forward_labels.reshape(-1)
             forward_loss = self.forward_criterion(forward_logits, forward_labels)
             metrics['forward_loss'] = forward_loss.item()
+            with torch.no_grad(): # Also compute the accuracy
+                forward_pred = torch.argmax(forward_logits, dim=-1)
+                mask = forward_labels == self.network.action_pad_idx
+                accuracy = ((forward_pred == forward_labels) * mask).sum().item() / mask.sum().item()
+                metrics['forward_accuracy'] = accuracy
         else:
             forward_loss = 0
 
