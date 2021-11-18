@@ -159,7 +159,7 @@ class BehaviorCloning(object):
             metrics['action_loss'] = action_loss.item()
             with torch.no_grad(): # Also compute the accuracy
                 action_pred = torch.argmax(action_logits, dim=-1)
-                mask = actions == self.network.action_pad_idx
+                mask = actions != self.network.action_pad_idx
                 accuracy = ((action_pred == actions) * mask).sum().item() / mask.sum().item()
                 metrics['action_accuracy'] = accuracy
         else:
@@ -173,7 +173,7 @@ class BehaviorCloning(object):
             metrics['lang_loss'] = lang_loss.item()
             with torch.no_grad():
                 lang_pred = torch.argmax(lang_logits, dim=-1)
-                mask = lang_pred == self.network.lang_pad_idx
+                mask = lang_pred != self.network.lang_pad_idx
                 accuracy = ((lang_pred == instruction_labels) * mask).sum().item() / mask.sum().item()
                 metrics['lang_accuracy'] = accuracy
         else:
