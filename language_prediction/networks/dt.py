@@ -401,7 +401,7 @@ class DTForward(nn.Module):
         # Run the model on the observation
         # We only want to send in the mission once. Can use the current timestep one.
         combined_obs = {'image': history['image'], 'mission': obs['mission']}
-        action_logits, _, _ = self(combined_obs, instructions=None, is_target=False)
+        action_logits, _, _ = self(combined_obs, forward_inputs=None, is_target=False)
         # We only care about the last timestep action logits
         action_logits = action_logits[0, -1, :]
         action = torch.argmax(action_logits).item()
