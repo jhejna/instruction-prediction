@@ -16,16 +16,16 @@ class MetaCraftingDataset(Dataset):
         {
             "goal":
                 [{
-                    "states": [ list of states]
-                    "actions": [list of actions]
-                    "inventories" : [list of inventories]
-                    "instructions" : [ the instructions concatenate together]
+                    "state": [ list of states]
+                    "action": [list of actions]
+                    "inventory" : [list of inventories]
+                    "instruction" : [ the instructions concatenate together]
                     },
                  {
-                    "states": [ list of states]
-                    "actions": [list of actions]
-                    "inventories" : [list of inventories]
-                    "instructions" : [ the instructions concatenate together]
+                    "state": [ list of states]
+                    "action": [list of actions]
+                    "inventory" : [list of inventories]
+                    "instruction" : [ the instructions concatenate together]
                     },
                  }
                 ],
@@ -56,19 +56,19 @@ class MetaCraftingDataset(Dataset):
                 current_ep = self.dataset[task][ep_idx]
                 # States
                 self.dataset[task][ep_idx]["grid_embedding"] = np.array(
-                        [get_grid_embedding(state, glove, embed_size) for state in current_ep['states']], dtype=np.float32)
+                        [get_grid_embedding(state, glove, embed_size) for state in current_ep['state']], dtype=np.float32)
                 self.dataset[task][ep_idx]["grid_onehot"] = np.array(
-                        [one_hot_grid(state, glove, embed_size) for state in current_ep['states']], dtype=np.float32)
-                del self.dataset[task][ep_idx]['states'] # conserve memory usage because we split it into two names
+                        [one_hot_grid(state, glove, embed_size) for state in current_ep['state']], dtype=np.float32)
+                del self.dataset[task][ep_idx]['state'] # conserve memory usage because we split it into two names
                 # Inventory
                 self.dataset['inventory'] = np.array(
                         [get_inventory_embedding(inventory, glove, embed_size) for inventory in current_ep['inventory']], dtype=np.float32)
                 # Actions
-                self.dataset[task][ep_idx]['actions'] = np.array(
-                        [one_hot_action(action) for action in current_ep['actions']], dtype=np.int32
+                self.dataset[task][ep_idx]['action'] = np.array(
+                        [one_hot_action(action) for action in current_ep['action']], dtype=np.int32
                 )
                 # Check that all the shapes line up
-                assert len(current_ep['actions']) == len(current_ep['grid_embedding']) == len(current_ep['grid_onehot']) == len(current_ep['inventory'])
+                assert len(current_ep['action']) == len(current_ep['grid_embedding']) == len(current_ep['grid_onehot']) == len(current_ep['inventory'])
                 del current_ep # Clean up any remaining references
         
         self.idx_to_key = {i: k for i, k in enumerate(self.dataset.keys())}
@@ -81,10 +81,10 @@ class MetaCraftingDataset(Dataset):
         assert len(dataset.keys()) > 0
         first_task = dataset[dataset.keys()[0]]
         assert isinstance(first_task, list)
-        assert "states" in first_task[0]
-        assert "actions" in first_task[0]
-        assert "inventories" in first_task[0]
-        assert "instructions" in first_task[0]
+        assert "state" in first_task[0]
+        assert "action" in first_task[0]
+        assert "inventory" in first_task[0]
+        assert "instruction" in first_task[0]
 
         if not path.endswith(".pkl"):
             path += ".pkl"
@@ -102,8 +102,8 @@ class MetaCraftingDataset(Dataset):
             "grid_embedding": 0,
             "grid_onehot": 0,
             "inventory": 0,
-            "actions": -100,
-            "instructions": len(self.vocab) - 1
+            "action": -100,
+            "instruction": len(self.vocab) - 1
         }
         batch = {}        
         for key in key_to_pad.keys():
