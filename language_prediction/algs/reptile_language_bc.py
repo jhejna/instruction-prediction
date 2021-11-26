@@ -1,9 +1,11 @@
 import os
 import time
+from gym.core import ObservationWrapper
 import torch
 import random
 import numpy as np
 from torch import autograd
+from copy import deepcopy
 
 from language_prediction.utils.logger import Logger
 from language_prediction.utils.evaluate import eval_policy
@@ -49,7 +51,9 @@ def ema_parameters(net, target_net, tau):
 
 class ReptileBehaviorCloning(object):
 
-    def __init__(self, env, network_class, network_kwargs={}, device="cpu",
+    def __init__(self, env, network_class, 
+                 network_kwargs={}, 
+                 device="cpu",
                  meta_params={
                     "num_support": 5,               # number of support trajectories (task specific mini-batch)
                     "num_query": 0,                 # number of query trajectories (unused in Reptile, no second-order gradients)
@@ -73,6 +77,9 @@ class ReptileBehaviorCloning(object):
                  dataset_fraction=1,
                  ):
         
+        # Reptile meta-learning
+        self.meta_params = meta_params
+        # Additional attributes
         self.env = env
         self.eval_env = eval_env
         num_actions = env.action_space.n # Only support discrete action spaces.
@@ -89,9 +96,6 @@ class ReptileBehaviorCloning(object):
         self.unsup_ema_update_freq = unsup_ema_update_freq
         self.unsup_ema_tau = unsup_ema_tau
         self.dataset_fraction = dataset_fraction
-
-        # Reptile meta-learning
-        self.meta_params = meta_params
 
         network_args = [num_actions]
         if isinstance(self.env.unwrapped, MazebaseGame):
@@ -149,7 +153,7 @@ class ReptileBehaviorCloning(object):
             # Only load the optimizer state dict if we are being strict.
             self.optim.load_state_dict(checkpoint['optim'])
 
-    def _compute_loss(self, obs, actions):
+    def compute_loss(self, obs, actions):
         metrics = {}
         obs = to_device(obs, self.device)
         actions = to_device(actions, self.device).long()
@@ -206,52 +210,48 @@ class ReptileBehaviorCloning(object):
         metrics['total_loss'] = total_loss.item()
         return total_loss, metrics
 
-    def inner_loop_step(self, network, support_set, query_set):
+    def inner_loop(self, support_set, query_set):
         """Takes inner loop step for each support set trajectory of a given task. 
-        Total inner loop steps = len(support_set) x self.meta_params["num_inner_steps"]
-
-        args:
-            support_set: {
-                "": 
-            }
-            query_set: {
-                "": 
-            }
+        Total inner loop steps = len(support_set) x self.meta_params["num_inner_steps"].
         """
+        obs_kwargs = ["grid_embedding", "grid_onehot", "inventory", "instruction"]
+        act_kwargs = ["action"]
+        
+        obs_dict_support = {k: support_set[k] for k in obs_kwargs}
+        act_dict_support = {k: support_set[k] for k in act_kwargs}
+        obs_dict_query = {k: query_set[k] for k in obs_kwargs}
+        act_dict_query = {k: query_set[k] for k in act_kwargs}
+
         for _ in range(self.meta_params["num_inner_steps"]):
-            for data in support_set:
-                pass 
-                # compute loss over the current trajectory
-                loss = self._compute_loss()
-                loss.backward()
-                # adapt parameters
-                for param in network.parameters():
-                    param.data -= self.meta_params["inner_lr"] * param.grad.data
+            support_metrics, loss = self.compute_loss(obs_dict_support, act_dict_support)
+            loss.backward()
+            # Adapt parameters
+            for param in self.network.parameters():
+                param.data -= self.meta_params["inner_lr"] * param.grad.data
+            
+        # Insert post-adaptation evaluation (optional)
+        # query_metrics, query_loss = self.compute_loss(obs_dict_query, act_dict_query)
+        # return support_metrics, query_metrics
+        return support_metrics
 
-        return network
+    def train(self, path, 
+        total_steps=None, 
+        log_freq=100, 
+        eval_freq=5000, 
+        eval_ep=0, 
+        validation_metric="action_loss", 
+        use_eval_mode=True, 
+        workers=4
+        ):
 
-    def train(self, path, total_steps=None, log_freq=100, eval_freq=5000, eval_ep=0, validation_metric="action_loss", use_eval_mode=True, workers=4):        
         logger = Logger(path=path)
-
         print("[Lang IL] Training a model with tunable parameters", sum(p.numel() for p in self.network.parameters() if p.requires_grad))
-        # Setup for the different ind
 
-        if isinstance(self.env.unwrapped, MiniGridEnv): # 
-            from language_prediction.datasets.babyai_dataset import BabyAITrajectoryDataset, traj_collate_fn
-            collate_fn = traj_collate_fn
-            dataset = BabyAITrajectoryDataset.load(self.dataset, dataset_fraction=self.dataset_fraction)
-            if not self.validation_dataset is None:
-                validation_dataset = BabyAITrajectoryDataset.load(self.validation_dataset, dataset_fraction=1.0)
-        elif isinstance(self.env.unwrapped, MazebaseGame):
-            from language_prediction.datasets import crafting_dataset
-            skip = 1 if self.unsup_coeff > 0.0 else -1
-            dataset = crafting_dataset.CraftingDataset(self.dataset, self.vocab, dataset_fraction=self.dataset_fraction, skip=skip) # Must have created the vocab. Note that it was already given to the agent.
-            if not self.validation_dataset is None:
-                validation_dataset = crafting_dataset.CraftingDataset(self.validation_dataset, self.vocab, dataset_fraction=1.0, skip=skip)
-            collate_fn = partial(crafting_dataset.collate_fn, vocab_size=len(self.vocab))
-        else:
-            raise ValueError("Unknown environment type passed in.")
+        # Create crafting meta dataset (Joey)
+        dataset = None
+        validation_dataset = None
 
+        # Create crafting dataloader
         dataloader = torch.utils.data.DataLoader(dataset, batch_size=self.batch_size, shuffle=True, num_workers=workers, pin_memory=True, collate_fn=collate_fn)
         if not self.validation_dataset is None:
             validation_dataloader = torch.utils.data.DataLoader(validation_dataset, batch_size=self.batch_size, shuffle=False, collate_fn=collate_fn)
@@ -268,17 +268,26 @@ class ReptileBehaviorCloning(object):
         self.network.train()
 
         while step < total_steps:
+            
+            for support_set, query_set in dataloader:
 
-            for obs, actions in dataloader:
+                # Pre-adaptation weights
+                prior_weights = deepcopy(self.network.state_dict())
 
-                loss, metrics = self._compute_loss(obs, actions)
-                loss.backward()
-                if self.grad_norm:
-                    torch.nn.utils.clip_grad_norm_(self.network.parameters(), self.grad_norm)
-                self.optim.step()
+                # Inner-loop adapation
+                metrics = self.inner_loop(support_set, query_set)
+
                 for metric_name, metric_value in metrics.items():
                     loss_lists[metric_name].append(metrics[metric_name])
                 step += 1
+
+                # Outer-loop step
+                # outer_lr = (self.meta_params["outer_lr"]) * (step / total_steps)      # linear schedule (OpenAI)
+                outer_lr = self.meta_params["outer_lr"]
+                post_adapt_weights = self.network.state_dict()
+                self.network.load_state_dict(
+                    {name: prior_weights[name] + (post_adapt_weights[name] - prior_weights[name]) * outer_lr for name in prior_weights}
+                )
 
                 if self.unsup_coeff > 0.0 and step % self.unsup_ema_update_freq == 0:
                     ema_parameters(self.network, self.ema_network, self.unsup_ema_tau)
