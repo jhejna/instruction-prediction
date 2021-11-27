@@ -105,7 +105,9 @@ class Reptile(object):
         metrics = {}
         batch = to_device(batch, self.device)
         actions = batch['action'].long()
-        instruction_labels = batch['instruction'].long()
+        if 'instruction' in batch:
+            instruction_labels = batch['instruction'][:, 1:].long()
+            batch['instruction'] = batch['instruction'][:, :-1].long()
 
         # Remove language inputs for a speedup if we don't need it.
         action_logits, lang_logits = self.network(batch)
@@ -162,11 +164,17 @@ class Reptile(object):
         print("[Lang IL] Training a model with tunable parameters", sum(p.numel() for p in self.network.parameters() if p.requires_grad))
         # Setup for the different ind
 
-        if isinstance(self.env.unwrapped, MazebaseGame):
+        if isinstance(self.env.unwrapped, MazebaseGame) and isinstance(self.network, language_prediction.networks.CraftingDT):
             from language_prediction.datasets import meta_crafting_dataset
             dataset = meta_crafting_dataset.SeqMetaCraftingDataset.load(self.dataset, self.vocab, num_support=self.num_support, num_query=self.num_query, dataset_fraction=self.dataset_fraction) # Must have created the vocab. Note that it was already given to the agent.
             if not self.validation_dataset is None:
                 validation_dataset = meta_crafting_dataset.SeqMetaCraftingDataset.load(self.validation_dataset, self.vocab, num_support=self.num_support, num_query=self.num_query, dataset_fraction=1.0)
+            collate_fn = meta_crafting_dataset.collate_fn
+        elif isinstance(self.env.unwrapped, MazebaseGame):
+            from language_prediction.datasets import meta_crafting_dataset
+            dataset = meta_crafting_dataset.MetaCraftingDataset.load(self.dataset, self.vocab, num_support=self.num_support, num_query=self.num_query, dataset_fraction=self.dataset_fraction) # Must have created the vocab. Note that it was already given to the agent.
+            if not self.validation_dataset is None:
+                validation_dataset = meta_crafting_dataset.MetaCraftingDataset.load(self.validation_dataset, self.vocab, num_support=self.num_support, num_query=self.num_query, dataset_fraction=1.0)
             collate_fn = meta_crafting_dataset.collate_fn
         else:
             raise ValueError("Unknown environment type passed in.")

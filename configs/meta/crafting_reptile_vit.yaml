@@ -7,7 +7,7 @@ eval_env: null
 
 alg: Reptile
 alg_kwargs:
-  dataset: datasets/crafting_seq_meta_traj
+  dataset: datasets/meta_crafting_dataset
   dataset_fraction: 1.0
   optim_cls: ["import", "torch.optim", "Adam"]
   optim_kwargs:
@@ -17,26 +17,29 @@ alg_kwargs:
   meta_optim_kwargs:
     lr: 0.1
     eps: 0.00000001
-  num_support: 20
-  num_query: 1
-  batch_size: 5
-  inner_iters: 4
-  meta_batch_size: 2
+  num_support: 256
+  num_query: 64
+  batch_size: 32
+  inner_iters: 8
+  meta_batch_size: 1
   action_coeff: 1.0
   lang_coeff: 0.5
 
 train_kwargs:
-  total_steps: 100000
+  total_steps: 200000
   log_freq: 10
   eval_freq: 50
   validation_metric: query/action_loss
   use_eval_mode: False
 
-network: CraftingDT
+network: MetaViT
 network_kwargs:
-  n_layer: 4
-  n_dec_layer: 1
-  n_head: 2
-  n_embd: 128
+  depth: 4
+  num_heads: 2
+  embed_dim: 128
+  unsup_dim: 128
   mlp_ratio: 2
-  block_size: 512
+  decoder_depth: 1
+  drop_rate: 0.1
+  attn_drop_rate: 0.1
+  drop_path_rate: 0.1
