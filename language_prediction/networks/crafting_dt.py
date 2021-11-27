@@ -1,6 +1,6 @@
 import torch
 from torch import nn
-from torch import functionl as F
+from torch import functional as F
 
 from .dt import GPTEncoder, Seq2SeqDecoder
 
@@ -14,12 +14,14 @@ class CraftingCNNStateEncoder(nn.Module):
         if downsample > 0:
             self.downsample = nn.Linear(embed_dim, downsample)
             self.inventory = nn.Sequential(nn.ReLU(), nn.Linear(downsample, inv_dim))
+            inp_dim = downsample + inv_dim
         else:
             self.downsample = None
             self.inventory = nn.Linear(embed_dim, inv_dim)
+            inp_dim = embed_dim + inv_dim
 
         self.cnn = nn.Sequential(
-            nn.Conv2d(embed_dim + inv_dim, hidden_dim),
+            nn.Conv2d(inp_dim, hidden_dim, kernel_size=3, stride=1, padding=1),
             nn.BatchNorm2d(hidden_dim),
             nn.ReLU(),
             nn.Conv2d(hidden_dim, output_dim, kernel_size=3, stride=1, padding=1),
@@ -30,14 +32,14 @@ class CraftingCNNStateEncoder(nn.Module):
     def forward(self, grid_embedding, grid_onehot, inventory):
         B, S = grid_embedding.shape[:2]
         onehot = self.onehot_fc(grid_onehot).view(B, S, 5, 5, self.embed_dim)
-        state = grid_embedding + one_hot
+        state = grid_embedding + onehot
         inventory = inventory.view(B, S, 1, 1, self.embed_dim)
         if self.downsample is not None:
             state = self.downsample(state)
             inventory = self.downsample(inventory)
         inventory = self.inventory(inventory) 
         # combine the two streams
-        inventory = inventory.expand_as(state)
+        inventory = inventory.expand(-1, -1, 5, 5, -1)
         x = torch.cat((state, inventory), dim=-1).view(B*S, 5, 5, -1)
         x = x.permute(0, 3, 1, 2)
         x = self.cnn(x)
@@ -47,20 +49,20 @@ class CraftingCNNStateEncoder(nn.Module):
         x = x.view(B, S, c)
         return x
 
-        
+
 class CraftingDT(nn.Module):
     
-    def __init__(self, num_actions, vocab, embed_weights
+    def __init__(self, num_actions, vocab, embed_weights,
                        n_head=2, n_embd=128, attn_pdrop=0.1, resid_pdrop=0.1, embd_pdrop=0.1, block_size=384, mlp_ratio=2, # Attention Params
                        vocab_size=40, n_layer=4, n_dec_layer=1, # Enc/Dec Params
-                       unsup_dim=128, use_mask=True): # Unsup params
+                       unsup_dim=128, use_mask=True, extractor_kwargs={"downsample": 96, "inv_dim": 32}): # Unsup params
         super().__init__()
 
         self.vocab = vocab
         self.vocab_size = len(self.vocab)
         embed_dim = 300
         # Setup the embeddings
-        self.embedding = nn.Embedding(self.vocab_size, self.glove_embed_dim, self.vocab_size - 1)
+        self.embedding = nn.Embedding(self.vocab_size, embed_dim, self.vocab_size - 1)
         self.embedding.load_state_dict({'weight': torch.from_numpy(embed_weights)})
         self.embedding.weight.requires_grad = False
 
@@ -68,9 +70,10 @@ class CraftingDT(nn.Module):
         self.encoder = GPTEncoder(n_head=n_head, n_embd=n_embd, attn_pdrop=attn_pdrop, resid_pdrop=resid_pdrop, embd_pdrop=embd_pdrop, 
                                   block_size=block_size, mlp_ratio=mlp_ratio, n_layer=n_layer)
         self.action_head = nn.Linear(n_embd, num_actions)
-
+        
         # Decoder
         if n_dec_layer > 0:
+            self.downsample = nn.Linear(embed_dim, n_embd)
             self.decoder = Seq2SeqDecoder(n_head=n_head, n_embd=n_embd, attn_pdrop=attn_pdrop, resid_pdrop=resid_pdrop, embd_pdrop=embd_pdrop, 
                                           block_size=block_size, mlp_ratio=mlp_ratio, n_layer=n_dec_layer)
             self.vocab_head = nn.Linear(n_embd, self.vocab_size - 1, bias=False)
@@ -83,11 +86,11 @@ class CraftingDT(nn.Module):
 
     @property
     def action_pad_idx(self):
-        return self.vocab_size - 1 # A consequence of the Crafting Dataset implementation.
+        return -100
     
     @property
     def lang_pad_idx(self):
-        return WORD_TO_IDX['PAD']
+        return self.vocab_size - 1 # A consequence of the Crafting Dataset implementation.
 
     def _init_weights(self, module):
         if isinstance(module, (nn.Linear, nn.Embedding)):
@@ -106,7 +109,8 @@ class CraftingDT(nn.Module):
         x = self.encoder(x)
         action_logits = self.action_head(x)
         if self.decoder is not None:
-            target = self.embedding(obs['instructions'])
+            target = self.embedding(obs['instruction'].long())
+            target = self.downsample(target)
             lang_logits = self.vocab_head(self.decoder(target, x, mask=None))
         else:
             lang_logits = None

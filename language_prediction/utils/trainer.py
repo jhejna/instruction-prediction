@@ -136,7 +136,7 @@ def train(config, path, device="auto"):
     config.parse() # Parse the config
 
     env = get_env(config) if config['env'] else None
-    eval_env = get_eval_env(config) if 'eval_env' in config else None
+    eval_env = get_eval_env(config) if 'eval_env' in config and config['eval_env'] else None
     alg_class = get_alg_class(config)
     network_class = get_network_class(config)
 

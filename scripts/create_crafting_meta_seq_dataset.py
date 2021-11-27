@@ -20,22 +20,20 @@ args = parser.parse_args()
 
 PATH_TO_FULL_DATA = args.input_path 
 
-SUBGOAL_DIVIDE_TOKEN = "<subgoal>"
-
 ## Input: json file of game traces
 ## Output: train/test sets for board states, inventories, and actions
 
-def read_dataset(save_path, all_future_instrs=False):
+def read_dataset(save_path):
 
     spell = SpellChecker()
 
     with open(PATH_TO_FULL_DATA) as f:
         dataset = json.load(f)
 
+    processed_dataset = {}
     print("**dataset loading**")
 
-    processed_dataset = {}
-
+    # Used for saving the complete vocab.
     all_instructions = []
 
     #read in all traces
@@ -53,62 +51,49 @@ def read_dataset(save_path, all_future_instrs=False):
         game = ast.literal_eval(game)
 
         for indiv_game in game:
-
-            temp_compile = []
-            current_instruction = None
             
-            for i in range(len(indiv_game)):
-                temp = indiv_game[i]
-                ## need to do this because when the json was saved, it is the resulting state, so need the previous state
-                if isinstance(temp, dict):
-                    if i > 0:
-                        temp_compile.append(temp['action'])
-                        temp_compile.append(current_instruction)
-                    grid = temp['observation'][0]
-                    temp_compile.append([grid,temp['inventory'],temp['goal']])
-                if isinstance(temp, str):
-
-                    # do spelling correction for each word:
-                    updated_temp = [spell.correction(word) for word in temp.lower().split(' ')]
-                    
-                    all_instructions.append(updated_temp)
-
-                    current_instruction = updated_temp
-
-            temp_compile.append("stop")
-            temp_compile.append(current_instruction)
-
             ep_states = []
             ep_inventories = []
             ep_actions = []
             ep_instructions = []
-            ep_goal = None
+            
+            for i in range(len(indiv_game)): # loop through the game
+                temp = indiv_game[i]
+                ## need to do this because when the json was saved, it is the resulting state, so need the previous state
+                if isinstance(temp, dict):
+                    if i > 0:
+                        ep_actions.append(temp['action'])
+                    ep_states.append(temp['observation'][0])
+                    ep_inventories.append(temp['inventory'])
+                    ep_goal = temp['goal']
 
-            for i in range(0, len(temp_compile), 3):
-                ep_states.append(temp_compile[i][0])
-                ep_inventories.append(temp_compile[i][1])
-                ep_goal = temp_compile[i][2]
-                ep_actions.append(temp_compile[i+1])
-                ep_instructions.append(temp_compile[i+2])
+                if isinstance(temp, str):
+                    # do spelling correction for each word:
+                    instruction = [spell.correction(word) for word in temp.lower().split(' ')]
+                    all_instructions.append(instruction)
+                    ep_instructions.append(instruction)
 
-            if any([instr is None for instr in ep_instructions]) or ep_goal is None:
+            if len(ep_states) < 3:
+                # Remove it
                 num_games_removed += 1
                 print("REMOVED GAME", trace)
                 continue # Do not append it
-
-            # Now add to the dataset
-            if not ep_goal in processed_dataset:
-                processed_dataset[ep_goal] = {
-                    "state": [],
-                    "inventory": [],
-                    "action": [],
-                    "instruction": []
-                }
             
-            processed_dataset[ep_goal]["state"].extend(ep_states)
-            processed_dataset[ep_goal]["inventory"].extend(ep_inventories)
-            processed_dataset[ep_goal]["action"].extend(ep_actions)
-            processed_dataset[ep_goal]["instruction"].extend(ep_instructions)
+            # Flatten the instructions
+            ep_instructions = [item for sublist in ep_instructions for item in sublist]
+            assert len(ep_states) - 1== len(ep_inventories) - 1 == len(ep_actions)
+
+            ep = {
+                "state": ep_states[:-1],
+                "inventory": ep_inventories[:-1],
+                "action": ep_actions,
+                "instruction": ep_instructions
+            }
+
+            # Add the episode
+            if not ep_goal in processed_dataset:
+                processed_dataset[ep_goal] = []
+            processed_dataset[ep_goal].append(ep)
 
             num_completed += 1
             if num_completed % 250 == 0:
