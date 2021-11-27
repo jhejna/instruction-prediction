@@ -22,9 +22,9 @@ alg_kwargs:
   batch_size: 5
   inner_iters: 4
   meta_batch_size: 2
-  action_coeff: 1.0
-  lang_coeff: 0.5
-  random_coeff: False
+  action_coeff: None
+  lang_coeff: None
+  random_coeff: True
 
 train_kwargs:
   total_steps: 100000

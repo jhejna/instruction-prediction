@@ -1,6 +1,7 @@
 import os
 import time
 import torch
+import random
 import numpy as np
 
 from language_prediction.utils.logger import Logger
@@ -14,6 +15,15 @@ from gym_minigrid.minigrid import MiniGridEnv
 import language_prediction
 from functools import partial
 from collections import defaultdict
+
+
+def sample_loss_coeffs():
+    """Randomly sample alpha balancing coefficient for re-scaling 
+    the behavior cloning and language (instruction) reconstrution losses.
+    """
+    alpha = random.random()
+    return alpha, (1-alpha)
+
 
 class Reptile(object):
 
@@ -31,6 +41,7 @@ class Reptile(object):
                  batch_size=4,
                  lang_coeff=1.0,
                  action_coeff=1.0,
+                 random_coeff=False,
                  checkpoint=None,
                  dataset_fraction=1,
                  num_support=12,
@@ -56,6 +67,7 @@ class Reptile(object):
         self.validation_dataset = validation_dataset
         self.action_coeff = action_coeff
         self.lang_coeff = lang_coeff
+        self.random_coeff = random_coeff
         self.dataset_fraction = dataset_fraction
         self.meta_batch_size = meta_batch_size
 
@@ -85,7 +97,6 @@ class Reptile(object):
         self.action_criterion = torch.nn.CrossEntropyLoss(ignore_index=self.network.action_pad_idx)
         self.instruction_criterion = torch.nn.CrossEntropyLoss(ignore_index=self.network.lang_pad_idx)
 
-        
     def predict(self, obs, deterministic=True, history=None):
         raise NotImplementedError
     
@@ -102,6 +113,9 @@ class Reptile(object):
             self.meta_optim.load_state_dict(checkpoint['optim'])
 
     def _compute_loss(self, batch, action_coeff=1.0, lang_coeff=0.0):
+        if self.random_coeff or action_coeff is None or lang_coeff is None:
+            action_coeff, lang_coeff = sample_loss_coeffs()
+
         metrics = {}
         batch = to_device(batch, self.device)
         actions = batch['action'].long()
