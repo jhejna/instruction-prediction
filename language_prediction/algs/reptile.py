@@ -216,7 +216,8 @@ class Reptile(object):
                     # Record most recent metrics for the sample task.
                     for metric_name, metric_value in metrics.items():
                         loss_lists[metric_name].append(metrics[metric_name])
-                weights.append(self.network.state_dict())       
+                    weights.append(self.network.state_dict())       
+                    self.network.load_state_dict(self.meta_network.state_dict())
 
                 if len(weights) == 1:
                     weights = weights[0]
@@ -226,7 +227,9 @@ class Reptile(object):
                         avg_weights = {}
                         for k in weights[0]:
                             avg_weights[k] = sum([weight[k] for weight in weights]) / len(weights)
-                
+                    weights = avg_weights
+                self.network.load_state_dict(weights)
+
                 # Now set the gradients of the meta optimizer to be the weight differences
                 self.meta_optim.zero_grad()
                 for meta_param, param in zip(self.meta_network.parameters(), self.network.parameters()):
@@ -255,7 +258,7 @@ class Reptile(object):
                     
                     if self.validation_dataset:
                         validation_loss_lists = defaultdict(list)
-                        for ((suppor_set, query_set),) in validation_dataloader:
+                        for ((support_set, query_set),) in validation_dataloader:
                             # Adapt the weights
                             adapt_metrics = self._adapt(support_set)
                             if use_eval_mode:
