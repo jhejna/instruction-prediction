@@ -28,7 +28,12 @@ class FOMMAML(Reptile):
             # Record most recent metrics for the sample task.
             for metric_name, metric_value in metrics.items():
                 loss_lists[metric_name].append(metrics[metric_name])
-            updates.append({k: v - last_backup[k] for k, v in self.network.state_dict()})
+            update = {}
+            current_backup = self.network.state_dict()
+            for k in last_backup:
+                assert k in current_backup, "self.network.state_dict() keys differ for the same network"
+                update[k] = current_backup[k] - last_backup[k]
+            updates.append(update)
             self.network.load_state_dict(self.meta_network.state_dict())
 
         if len(updates) == 1:
