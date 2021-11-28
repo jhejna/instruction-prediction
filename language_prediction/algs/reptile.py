@@ -170,6 +170,40 @@ class Reptile(object):
             self.optim.step()
         return metrics
 
+    def _training_step(self, meta_batch, loss_lists):
+        """Take a single training step update with Reptile.
+        """
+        weights = []
+        for support_set, _ in meta_batch:
+            # update the fast weights
+            metrics = self._adapt(support_set)
+            # Record most recent metrics for the sample task.
+            for metric_name, metric_value in metrics.items():
+                loss_lists[metric_name].append(metrics[metric_name])
+            weights.append(self.network.state_dict())       
+            self.network.load_state_dict(self.meta_network.state_dict())
+
+        if len(weights) == 1:
+            weights = weights[0]
+        else:
+            #  We have a meta batch size larger than one and need to average the weights
+            with torch.no_grad():
+                avg_weights = {}
+                for k in weights[0]:
+                    avg_weights[k] = sum([weight[k] for weight in weights]) / len(weights)
+            weights = avg_weights
+        self.network.load_state_dict(weights)
+
+        # Now set the gradients of the meta optimizer to be the weight differences
+        self.meta_optim.zero_grad()
+        for meta_param, param in zip(self.meta_network.parameters(), self.network.parameters()):
+            if meta_param.grad is None:
+                meta_param.grad = torch.autograd.Variable(torch.zeros(meta_param.size())).to(self.device)
+            meta_param.grad.data.zero_() # perhaps unnecesary
+            meta_param.grad.data.add_(meta_param.data - param.data) # Phi - W is the gradient
+        
+        self.meta_optim.step()
+
     def train(self, path, total_steps, log_freq=10, eval_freq=100, eval_ep=0, validation_metric="adapt/action_loss", use_eval_mode=True, workers=4):        
         assert eval_ep == 0, "Eval episodes not supported for meta learning"
         
@@ -209,36 +243,8 @@ class Reptile(object):
             # Note that the meta batch size is usually one.
             for meta_batch in dataloader:
                 
-                weights = []
-                for support_set, _ in meta_batch:
-                    # update the fast weights
-                    metrics = self._adapt(support_set)
-                    # Record most recent metrics for the sample task.
-                    for metric_name, metric_value in metrics.items():
-                        loss_lists[metric_name].append(metrics[metric_name])
-                    weights.append(self.network.state_dict())       
-                    self.network.load_state_dict(self.meta_network.state_dict())
-
-                if len(weights) == 1:
-                    weights = weights[0]
-                else:
-                    #  We have a meta batch size larger than one and need to average the weights
-                    with torch.no_grad():
-                        avg_weights = {}
-                        for k in weights[0]:
-                            avg_weights[k] = sum([weight[k] for weight in weights]) / len(weights)
-                    weights = avg_weights
-                self.network.load_state_dict(weights)
-
-                # Now set the gradients of the meta optimizer to be the weight differences
-                self.meta_optim.zero_grad()
-                for meta_param, param in zip(self.meta_network.parameters(), self.network.parameters()):
-                    if meta_param.grad is None:
-                        meta_param.grad = torch.autograd.Variable(torch.zeros(meta_param.size())).to(self.device)
-                    meta_param.grad.data.zero_() # perhaps unnecesary
-                    meta_param.grad.data.add_(meta_param.data - param.data) # Phi - W is the gradient
-                
-                self.meta_optim.step()
+                # Take a single reptile training step
+                self._training_step(meta_batch, loss_lists)
                 step += 1
 
                 # Now sync the weights of the two networks.
