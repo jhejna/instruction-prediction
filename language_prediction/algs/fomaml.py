@@ -2,10 +2,10 @@ import torch
 from .reptile import Reptile
 
 
-class FOMMAML(Reptile):
+class FOMAML(Reptile):
 
     def __init__(self, *args, **kwargs):
-        super(self, FOMMAML).__init__(*args, **kwargs)
+        super(self, FOMAML).__init__(*args, **kwargs)
     
     def _adapt(self, support_set):
         # Adapt the fast network parameters based on the support set
