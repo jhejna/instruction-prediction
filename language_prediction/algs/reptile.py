@@ -49,6 +49,7 @@ class Reptile(object):
                  num_query=1,
                  meta_batch_size=1,
                  inner_iters=3,
+                 eval_with_actions=True
                  ):
         
         self.env = env
@@ -71,6 +72,7 @@ class Reptile(object):
         self.random_coeff = random_coeff
         self.dataset_fraction = dataset_fraction
         self.meta_batch_size = meta_batch_size
+        self.eval_with_actions = eval_with_actions
         assert self.meta_batch_size == 1, "Only Meta Batch Size of one is currently supported."
 
         network_args = [num_actions]
@@ -115,9 +117,6 @@ class Reptile(object):
             self.meta_optim.load_state_dict(checkpoint['optim'])
 
     def _compute_loss(self, batch, action_coeff=1.0, lang_coeff=0.0):
-        if self.random_coeff or action_coeff is None or lang_coeff is None:
-            action_coeff, lang_coeff = sample_loss_coeffs()
-
         metrics = {}
         batch = to_device(batch, self.device)
         actions = batch['action'].long()
@@ -162,12 +161,17 @@ class Reptile(object):
         metrics['total_loss'] = total_loss.item()
         return total_loss, metrics
 
-    def _adapt(self, support_set):
+    def _adapt(self, support_set, action_coeff=1.0, lang_coeff=0.0, is_eval=False):
         # Adapt the fast network parameters based on the support set
+        if self.random_coeff and not is_eval:
+            action_coeff, lang_coeff = sample_loss_coeffs()
+            action_coeff *= self.action_coeff
+            lang_coeff *= self.lang_coeff
+
         for i in range(self.inner_iters):
             current_batch = {k: v[i*self.batch_size:(i+1)*self.batch_size] for k, v in support_set.items()}
             self.optim.zero_grad()
-            loss, metrics = self._compute_loss(current_batch, action_coeff=self.action_coeff, lang_coeff=self.lang_coeff)
+            loss, metrics = self._compute_loss(current_batch, action_coeff=action_coeff, lang_coeff=lang_coeff)
             loss.backward()
             self.optim.step()
         return metrics
@@ -178,7 +182,7 @@ class Reptile(object):
         # Take a single reptile training step
         for support_set, _ in meta_batch:
             # update the fast weights
-            metrics = self._adapt(support_set)
+            metrics = self._adapt(support_set, action_coeff=self.action_coeff, lang_coeff=self.lang_coeff, is_eval=False)
             # Record most recent metrics for the sample task.
             for metric_name, metric_value in metrics.items():
                 loss_lists[metric_name].append(metrics[metric_name])
@@ -260,11 +264,11 @@ class Reptile(object):
                         validation_loss_lists = defaultdict(list)
                         for ((support_set, query_set),) in validation_dataloader:
                             # Adapt the weights
-                            adapt_metrics = self._adapt(support_set)
+                            adapt_metrics = self._adapt(support_set, action_coeff=(0 if self.random_coeff else self.action_coeff), lang_coeff=self.lang_coeff, is_eval=True)
                             if use_eval_mode:
                                 self.network.eval()
                             with torch.no_grad():
-                                _, query_metrics = self._compute_loss(query_set, action_coeff=self.action_coeff, lang_coeff=self.lang_coeff)
+                                _, query_metrics = self._compute_loss(query_set, action_coeff=self.action_coeff, lang_coeff=0) # Eval on just action performance.
                             self.network.train()
                             for metric_name, metric_value in adapt_metrics.items():
                                 validation_loss_lists["adapt/" + metric_name].append(metrics[metric_name])
