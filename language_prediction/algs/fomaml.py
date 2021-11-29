@@ -1,6 +1,6 @@
 from typing import OrderedDict
 import torch
-from .reptile import Reptile
+from .reptile import Reptile, sample_loss_coeffs
 from copy import deepcopy
 
 
@@ -21,7 +21,7 @@ class FOMAML(Reptile):
             last_backup = deepcopy(self.network.state_dict())
             current_batch = {k: v[i*self.batch_size:(i+1)*self.batch_size] for k, v in support_set.items()}
             self.optim.zero_grad()
-            loss, metrics = self._compute_loss(current_batch, action_coeff=self.action_coeff, lang_coeff=self.lang_coeff)
+            loss, metrics = self._compute_loss(current_batch, action_coeff=action_coeff, lang_coeff=lang_coeff)
             loss.backward()
             self.optim.step()
         return metrics, last_backup

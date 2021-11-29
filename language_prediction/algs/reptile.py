@@ -127,7 +127,7 @@ class Reptile(object):
         # Remove language inputs for a speedup if we don't need it.
         action_logits, lang_logits = self.network(batch)
         
-        if action_coeff > 0:    
+        if action_coeff > 0:
             if len(actions.shape) > 1: # Reshape the actions if we are using sequences
                 action_logits = action_logits.reshape(-1, action_logits.size(-1))
                 actions = actions.reshape(-1)
@@ -264,16 +264,20 @@ class Reptile(object):
                         validation_loss_lists = defaultdict(list)
                         for ((support_set, query_set),) in validation_dataloader:
                             # Adapt the weights
-                            adapt_metrics = self._adapt(support_set, action_coeff=(0 if self.random_coeff else self.action_coeff), lang_coeff=self.lang_coeff, is_eval=True)
+                            adapt_metrics = self._adapt(support_set, action_coeff=(-1 if self.random_coeff else self.action_coeff), lang_coeff=self.lang_coeff, is_eval=True)
+                            if isinstance(adapt_metrics, tuple):
+                                adapt_metrics = adapt_metrics[0]
+                            
                             if use_eval_mode:
                                 self.network.eval()
                             with torch.no_grad():
-                                _, query_metrics = self._compute_loss(query_set, action_coeff=self.action_coeff, lang_coeff=0) # Eval on just action performance.
+                                _, query_metrics = self._compute_loss(query_set, action_coeff=self.action_coeff, lang_coeff=-1) # Eval on just action performance.
                             self.network.train()
+
                             for metric_name, metric_value in adapt_metrics.items():
-                                validation_loss_lists["adapt/" + metric_name].append(metrics[metric_name])
+                                validation_loss_lists["adapt/" + metric_name].append(adapt_metrics[metric_name])
                             for metric_name, metric_value in query_metrics.items():
-                                validation_loss_lists["query/" + metric_name].append(metrics[metric_name])
+                                validation_loss_lists["query/" + metric_name].append(query_metrics[metric_name])
                             
                             # Now sync the weights of the two networks.
                             self.network.load_state_dict(self.meta_network.state_dict())
