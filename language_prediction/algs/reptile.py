@@ -3,6 +3,7 @@ import time
 import torch
 import random
 import numpy as np
+from copy import deepcopy
 
 from language_prediction.utils.logger import Logger
 from language_prediction.utils.evaluate import eval_policy
@@ -176,12 +177,30 @@ class Reptile(object):
         """Take a single training step update with Reptile.
         """
         # Take a single reptile training step
+        # weights = []
         for support_set, _ in meta_batch:
             # update the fast weights
             metrics = self._adapt(support_set)
             # Record most recent metrics for the sample task.
             for metric_name, metric_value in metrics.items():
                 loss_lists[metric_name].append(metrics[metric_name])
+
+            # weights.append(deepcopy(self.network.state_dict()))
+            # self.network.load_state_dict(self.meta_network.state_dict())
+        
+        # if len(weights) == 1:
+        #     weights = weights[0]
+        # else:
+        #     #  We have a meta batch size larger than one and need to average the weights
+        #     with torch.no_grad():
+        #         avg_weights = deepcopy(self.network.state_dict())
+        #         for k in avg_weights:
+        #             avg_tensor = torch.zeros_like(avg_weights[k])
+        #             for weight in weights:
+        #                 avg_tensor += weight[k]
+        #             avg_weights[k] = (avg_tensor / len(weights)).clone()
+        #         weights = avg_weights
+        # self.network.load_state_dict(weights)
 
         # Now set the gradients of the meta optimizer to be the weight differences
         self.meta_optim.zero_grad()

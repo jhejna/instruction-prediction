@@ -43,14 +43,15 @@ class FOMAML(Reptile):
         if len(updates) == 1:
             updates = updates[0]
         else:
-            avg_updates = deepcopy(self.network.state_dict())
-            for k in avg_updates:
-                avg_tensor = torch.zeros_like(avg_updates[k])
-                for update in updates:
-                    avg_tensor += update[k]
-                avg_updates[k] = (avg_tensor / len(updates)).clone()
-            updates = avg_updates
-            
+            with torch.no_grad():
+                avg_updates = deepcopy(self.network.state_dict())
+                for k in avg_updates:
+                    avg_tensor = torch.zeros_like(avg_updates[k])
+                    for update in updates:
+                        avg_tensor += update[k]
+                    avg_updates[k] = (avg_tensor / len(updates)).clone()
+                updates = avg_updates
+
         # Hacky workaround to storing updates in self.network.parameters() for below gradient computation
         self.network.load_state_dict(updates)
 
