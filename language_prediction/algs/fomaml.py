@@ -1,16 +1,18 @@
+from typing import OrderedDict
 import torch
 from .reptile import Reptile
+from copy import deepcopy
 
 
 class FOMAML(Reptile):
 
     def __init__(self, *args, **kwargs):
-        super(self, FOMAML).__init__(*args, **kwargs)
+        super(FOMAML, self).__init__(*args, **kwargs)
     
     def _adapt(self, support_set):
         # Adapt the fast network parameters based on the support set
         for i in range(self.inner_iters):
-            last_backup = self.network.state_dict()
+            last_backup = deepcopy(self.network.state_dict())
             current_batch = {k: v[i*self.batch_size:(i+1)*self.batch_size] for k, v in support_set.items()}
             self.optim.zero_grad()
             loss, metrics = self._compute_loss(current_batch, action_coeff=self.action_coeff, lang_coeff=self.lang_coeff)
@@ -21,6 +23,7 @@ class FOMAML(Reptile):
     def _training_step(self, meta_batch, loss_lists):
         """Take a single training step update with First Order MAML.
         """
+        # Take a single first-order MAML training step
         updates = []
         for support_set, _ in meta_batch:
             # update the fast weights
@@ -28,24 +31,26 @@ class FOMAML(Reptile):
             # Record most recent metrics for the sample task.
             for metric_name, metric_value in metrics.items():
                 loss_lists[metric_name].append(metrics[metric_name])
-            update = {}
-            current_backup = self.network.state_dict()
-            for k in last_backup:
-                assert k in current_backup, "self.network.state_dict() keys differ for the same network"
-                update[k] = current_backup[k] - last_backup[k]
+            
+            # Store query set weight delta
+            update = deepcopy(self.network.state_dict())
+            for k in update:
+                update[k] -= last_backup[k]
             updates.append(update)
+            # Reset network weights for next step
             self.network.load_state_dict(self.meta_network.state_dict())
 
         if len(updates) == 1:
             updates = updates[0]
         else:
-            #  We have a meta batch size larger than one and need to average the weights
-            with torch.no_grad():
-                avg_updates = {}
-                for k in updates[0]:
-                    avg_updates[k] = sum([update[k] for update in updates]) / len(updates)
+            avg_updates = deepcopy(self.network.state_dict())
+            for k in avg_updates:
+                avg_tensor = torch.zeros_like(avg_updates[k])
+                for update in updates:
+                    avg_tensor += update[k]
+                avg_updates[k] = (avg_tensor / len(updates)).clone()
             updates = avg_updates
-
+            
         # Hacky workaround to storing updates in self.network.parameters() for below gradient computation
         self.network.load_state_dict(updates)
 
@@ -58,4 +63,5 @@ class FOMAML(Reptile):
             meta_param.grad.data.add_(param.data)
         
         self.meta_optim.step()
-
+        # Now sync the weights of the two networks.
+        self.network.load_state_dict(self.meta_network.state_dict())
