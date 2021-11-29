@@ -21,7 +21,7 @@ alg_kwargs:
   num_query: 1
   batch_size: 5
   inner_iters: 4
-  meta_batch_size: 2
+  meta_batch_size: 1
   action_coeff: None
   lang_coeff: None
   random_coeff: True

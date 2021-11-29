@@ -1,43 +1,32 @@
 ## Config for Crafting BC IL experiment
-env: mazebase-v0
-env_kwargs:
-  config: seen_full
+env: omniglot
   
 eval_env: null
 
-alg: FOMAML
+alg: Reptile
 alg_kwargs:
-  dataset: datasets/crafting_seq_meta_traj
-  dataset_fraction: 1.0
   optim_cls: ["import", "torch.optim", "Adam"]
   optim_kwargs:
-    lr: 0.0005
+    lr: 0.001
     eps: 0.00000001
   meta_optim_cls: ["import", "torch.optim", "SGD"]
   meta_optim_kwargs:
     lr: 0.1
     eps: 0.00000001
-  num_support: 20
+  num_support: 5
   num_query: 1
   batch_size: 5
-  inner_iters: 4
+  inner_iters: 1
   meta_batch_size: 1
-  action_coeff: None
-  lang_coeff: None
-  random_coeff: True
+  action_coeff: 1.0
+  lang_coeff: 0.0
+  random_coeff: False
 
 train_kwargs:
   total_steps: 100000
   log_freq: 10
-  eval_freq: 50
+  eval_freq: 200
   validation_metric: query/action_loss
   use_eval_mode: False
 
-network: CraftingDT
-network_kwargs:
-  n_layer: 4
-  n_dec_layer: 1
-  n_head: 2
-  n_embd: 128
-  mlp_ratio: 2
-  block_size: 512
+network: OmniglotCNN
