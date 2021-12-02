@@ -219,7 +219,7 @@ class Reptile(object):
         # Now sync the weights of the two networks.
         self.network.load_state_dict(self.meta_network.state_dict())
 
-    def train(self, path, total_steps, log_freq=10, eval_freq=100, eval_ep=0, validation_metric="adapt/action_loss", use_eval_mode=True, workers=4):        
+    def train(self, path, total_steps, log_freq=10, eval_freq=100, eval_ep=0, validation_metric="adapt/action_loss", only_lang_adapt=False, use_eval_mode=True, workers=4):        
         assert eval_ep == 0, "Eval episodes not supported for meta learning"
         
         logger = Logger(path=path)
@@ -284,7 +284,8 @@ class Reptile(object):
                         validation_loss_lists = defaultdict(list)
                         for ((support_set, query_set),) in validation_dataloader:
                             # Adapt the weights
-                            adapt_metrics = self._adapt(support_set, action_coeff=-1, lang_coeff=self.lang_coeff, is_eval=True) # Adapt with only language
+                            adapt_action_coeff = -1 if only_lang_adapt else self.action_coeff 
+                            adapt_metrics = self._adapt(support_set, action_coeff=adapt_action_coeff, lang_coeff=self.lang_coeff, is_eval=True) # Adapt with only language
                             if isinstance(adapt_metrics, tuple):
                                 adapt_metrics = adapt_metrics[0]
                             

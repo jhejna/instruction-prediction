@@ -1,0 +1,61 @@
+## Config for Crafting BC IL experiment
+env: mazebase-v0
+env_kwargs:
+  config: seen_full
+
+eval_env: null
+
+alg: FOMAML
+alg_kwargs:
+  dataset: datasets/crafting_seq_meta_traj
+  validation_dataset: datasets/crafting_seq_meta_traj
+  dataset_fraction: 1.0
+  optim_cls: ["import", "torch.optim", "Adam"]
+  optim_kwargs:
+    lr: 0.0005
+    eps: 0.00000001
+  meta_optim_cls: ["import", "torch.optim", "SGD"]
+  meta_optim_kwargs:
+    lr: 0.1
+    eps: 0.00000001
+  num_support: 20
+  num_query: 1
+  batch_size: 5
+  inner_iters: 4
+  meta_batch_size: 1
+  action_coeff: 1.0
+  lang_coeff: 0.5
+  random_coeff: False
+  train_tasks: ["Make Diamond Boots (Diamond Boots=1)",
+                "Make Iron Ore (Iron Ore=1)",
+                "Make Gold Ore (Gold Ore=1)",
+                "Make Brick Stairs (Brick Stairs=1)",
+                "Make Iron Ingot (Iron Ingot=1)",
+                "Make Wooden Door (Wooden Door=1)",
+                "Make Leather Chestplate (Leather Chestplate=1)",
+                "Make Leather Helmet (Leather Helmet=1)",
+                "Make Diamond Pickaxe (Diamond Pickaxe=1)",
+                "Make Stone Pickaxe (Stone Pickaxe=1)",
+                "Make Leather Leggins (Leather Leggins=1)",
+                "Make Wood stairs (Wood stairs=1)"
+               ]
+  valid_tasks: ["Make Leather Boots (Leather Boots=1)",
+                "Make Cobblestone Stairs (Cobblestone Stairs=1)"
+               ]
+
+train_kwargs:
+  total_steps: 200000
+  log_freq: 10
+  eval_freq: 500
+  validation_metric: query/action_loss
+  use_eval_mode: False
+  only_lang_adapt: False
+
+network: CraftingDT
+network_kwargs:
+  n_layer: 4
+  n_dec_layer: 1
+  n_head: 2
+  n_embd: 128
+  mlp_ratio: 2
+  block_size: 512
