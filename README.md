@@ -81,7 +81,7 @@ To use the SLURM launcher, you need to create a `setup_shell.sh` command that wi
 
 ```
 source /cvgl2/u/jhejna/condas/napoli/bin/activate
-cd /cvgl2/u/jhejna/behavior
+cd /cvgl2/u/jhejna/language-prediction
 conda activate language_prediction
 ```
 Create your own script, call it `setup_shell.sh` and place it in the root level of the directory. It should be ignored by the `.gitignore`.
