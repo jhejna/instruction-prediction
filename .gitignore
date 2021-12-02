@@ -3,6 +3,7 @@ output/
 datasets/
 !language_prediction/datasets
 .vector_cache
+setup_shell.sh
 
 # Byte-compiled / optimized / DLL files
 __pycache__/

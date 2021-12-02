@@ -74,3 +74,24 @@ Here is the evaluation command for Crafting on only unseen three-step levels. A 
 ```
 python scripts/test.py --path path/to/model --best --num-ep 500 --override env_kwargs.config unseen_3only
 ```
+
+## SLURM Usage
+
+To use the SLURM launcher, you need to create a `setup_shell.sh` command that will run to create the experiment environment. Mine is very simple:
+
+```
+source /cvgl2/u/jhejna/condas/napoli/bin/activate
+cd /cvgl2/u/jhejna/behavior
+conda activate language_prediction
+```
+Create your own script, call it `setup_shell.sh` and place it in the root level of the directory. It should be ignored by the `.gitignore`.
+Once you have done that, you should be all ready to use the sweeper! Here is an example command to run the sweep specified in the meta config folder. The sweeper will automatically detect single jobs as `yaml` files and sweeps as `json` files.
+
+The following command launches a sweep from the specified file:
+```
+python slurm/launch_slurm_job.py --partition napoli-gpu --mem 24G --gpus 1 --cpus 6 --job-name AlgItrRegSweep --arguments config=configs/lang_adapt/alg_iter_reg_sweep.json save-path=/cvgl2/u/jhejna/output/langauge_prediction
+```
+
+A cool trick: If the cluster is particularly busy, *you can run multiple jobs on the same GPU*. This is done by specifying the `--jobs-per-instance` argument to a value larger than one. You can also change the entry point script to anything via the `--entry-point` argument. By default, it is set to the `scripts/train.py` file. This is the only entrypoint that current supports sweeping. The `--arguments` argument accents key-pair values of the form `key=value` to be sent to the entry point script as arguments.
+
+All results of the sweep will be stored in the `save-path` folder with the argument changes between the  different runs as the names.

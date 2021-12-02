@@ -68,7 +68,7 @@ class Reptile(object):
         self.num_query = num_query
         self.inner_iters = inner_iters
         assert self.num_support % self.batch_size == 0, "Batch size for the fast updates must divide the query size"
-        assert self.inner_iters * self.batch_size == self.num_support, "The number of iters ties the batch size must be the support size."
+        assert self.inner_iters * self.batch_size <= self.num_support, "The number of iters times the batch size must be less than the support size."
         self.dataset = dataset
         self.train_tasks = train_tasks
         self.validation_dataset = validation_dataset

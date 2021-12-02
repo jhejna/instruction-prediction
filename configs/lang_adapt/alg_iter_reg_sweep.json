@@ -1,0 +1,6 @@
+{
+    "base": "configs/lang_adapt/crafting_meta.yaml",
+    "alg": ["FOMAML", "Reptile"],
+    "alg_kwargs.inner_iters": [2, 4],
+    "alg_kwargs.optim_kwargs.weight_decay": [0.0, 0.01]
+}

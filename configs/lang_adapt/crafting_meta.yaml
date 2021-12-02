@@ -10,10 +10,11 @@ alg_kwargs:
   dataset: datasets/crafting_seq_meta_traj
   validation_dataset: datasets/crafting_seq_meta_traj
   dataset_fraction: 1.0
-  optim_cls: ["import", "torch.optim", "Adam"]
+  optim_cls: ["import", "torch.optim", "AdamW"]
   optim_kwargs:
     lr: 0.0005
     eps: 0.00000001
+    weight_decay: 0.0
   meta_optim_cls: ["import", "torch.optim", "SGD"]
   meta_optim_kwargs:
     lr: 0.1
@@ -39,14 +40,14 @@ alg_kwargs:
                 "Make Leather Leggins (Leather Leggins=1)",
                 "Make Wood stairs (Wood stairs=1)"
                ]
-  valid_tasks: ["Make Leather Boots (Leather Boots=1)",
+  validation_tasks: ["Make Leather Boots (Leather Boots=1)",
                 "Make Cobblestone Stairs (Cobblestone Stairs=1)"
                ]
 
 train_kwargs:
   total_steps: 200000
   log_freq: 10
-  eval_freq: 500
+  eval_freq: 50 # Eval every 50 steps. This is pretty frequent!
   validation_metric: query/action_loss
   use_eval_mode: False
   only_lang_adapt: False
