@@ -154,6 +154,8 @@ class Experiment(dict):
             if remove_trailing_underscore:
                 name = name[:-1]
             name = os.path.join(self.name, name)    
+            if not os.path.exists(TMP_DIR):
+                os.mkdir(TMP_DIR)
             _, config_path = tempfile.mkstemp(text=True, prefix='config', suffix='.json', dir=TMP_DIR)
             print("Variant", i+1)
             print(config)
