@@ -61,6 +61,7 @@ class Reptile(object):
         num_actions = env.action_space.n if not isinstance(env, str) else 5 # HACK: Supports omniglot. # Only support discrete action spaces.
         if device == "auto":
             device = "cuda" if torch.cuda.is_available() else "cpu"
+            torch.cuda.empty_cache()
         self.device = torch.device(device)
         self.batch_size = batch_size
         self.num_support = num_support
@@ -287,14 +288,14 @@ class Reptile(object):
                         validation_loss_lists = defaultdict(list)
                         for ((support_set, query_set),) in validation_dataloader:
                             # Adapt the weights
-                            adapt_metrics = self._adapt(support_set, action_coeff=(-1 if self.random_coeff else self.action_coeff), lang_coeff=self.lang_coeff, is_eval=True)
+                            adapt_metrics = self._adapt(support_set, action_coeff=-1, lang_coeff=self.lang_coeff, is_eval=True) # Adapt with only language
                             if isinstance(adapt_metrics, tuple):
                                 adapt_metrics = adapt_metrics[0]
                             
                             if use_eval_mode:
                                 self.network.eval()
                             with torch.no_grad():
-                                _, query_metrics = self._compute_loss(query_set, action_coeff=self.action_coeff, lang_coeff=-1) # Eval on just action performance.
+                                _, query_metrics = self._compute_loss(query_set, action_coeff=self.action_coeff, lang_coeff=-1) # Eval on only actions
                             self.network.train()
 
                             for metric_name, metric_value in adapt_metrics.items():
