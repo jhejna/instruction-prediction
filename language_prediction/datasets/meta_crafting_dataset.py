@@ -36,10 +36,9 @@ class SeqMetaCraftingDataset(Dataset):
         super().__init__()
         assert dataset_fraction == 1, "Smaller Dataset sizes not supportes"
         self.dataset = dataset
-        for goal in self.dataset.keys():
+        for goal in list(self.dataset.keys()):
             if goal not in tasks:
                 del self.dataset[goal]
-
         self.vocab = vocab
         self.num_support = num_support
         self.num_query = num_query
@@ -59,7 +58,7 @@ class SeqMetaCraftingDataset(Dataset):
 
         # Preprocess the dataset.
         # This is done on load to conserve storage space.
-        for task in self.dataset.keys():                
+        for task in self.dataset.keys():           
             for ep_idx in range(len(self.dataset[task])):
                 # Run preprocessing over the transitions
                 current_ep = self.dataset[task][ep_idx]
@@ -79,7 +78,7 @@ class SeqMetaCraftingDataset(Dataset):
                 # Check that all the shapes line up
                 assert len(current_ep['action']) == len(current_ep['grid_embedding']) == len(current_ep['grid_onehot']) == len(current_ep['inventory'])
                 del current_ep # Clean up any remaining references
-        
+
         self.idx_to_key = {i: k for i, k in enumerate(self.dataset.keys())}
 
     @classmethod
