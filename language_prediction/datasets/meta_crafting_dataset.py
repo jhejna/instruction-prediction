@@ -10,7 +10,7 @@ from language_prediction.envs.mazebase import get_grid_embedding, one_hot_grid, 
 
 class SeqMetaCraftingDataset(Dataset):
 
-    def __init__(self, dataset, vocab, num_support=3, num_query=1, dataset_fraction=1):
+    def __init__(self, dataset, vocab, tasks=[], num_support=3, num_query=1, dataset_fraction=1):
         '''
         The `dataset` argument should have the following structure:
         {
@@ -36,6 +36,10 @@ class SeqMetaCraftingDataset(Dataset):
         super().__init__()
         assert dataset_fraction == 1, "Smaller Dataset sizes not supportes"
         self.dataset = dataset
+        for goal in self.dataset.keys():
+            if goal not in tasks:
+                del self.dataset[goal]
+
         self.vocab = vocab
         self.num_support = num_support
         self.num_query = num_query
@@ -55,7 +59,7 @@ class SeqMetaCraftingDataset(Dataset):
 
         # Preprocess the dataset.
         # This is done on load to conserve storage space.
-        for task in self.dataset.keys():
+        for task in self.dataset.keys():                
             for ep_idx in range(len(self.dataset[task])):
                 # Run preprocessing over the transitions
                 current_ep = self.dataset[task][ep_idx]
@@ -77,7 +81,7 @@ class SeqMetaCraftingDataset(Dataset):
                 del current_ep # Clean up any remaining references
         
         self.idx_to_key = {i: k for i, k in enumerate(self.dataset.keys())}
-    
+
     @classmethod
     def save(cls, dataset, vocab, path):
         # Run checks on the dataset structure

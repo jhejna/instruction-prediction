@@ -33,7 +33,9 @@ class Reptile(object):
                  optim_cls=torch.optim.Adam, eval_env=None,
                  meta_optim_cls=torch.optim.SGD,
                  dataset=None,
+                 train_tasks=[],
                  validation_dataset=None,
+                 validation_tasks=[],
                  optim_kwargs={
                      'lr': 0.0001
                  },
@@ -67,7 +69,9 @@ class Reptile(object):
         assert self.num_support % self.batch_size == 0, "Batch size for the fast updates must divide the query size"
         assert self.inner_iters * self.batch_size == self.num_support, "The number of iters ties the batch size must be the support size."
         self.dataset = dataset
+        self.train_tasks = train_tasks
         self.validation_dataset = validation_dataset
+        self.validation_tasks = validation_tasks
         self.action_coeff = action_coeff
         self.lang_coeff = lang_coeff
         self.random_coeff = random_coeff
@@ -181,7 +185,7 @@ class Reptile(object):
         """Take a single training step update with Reptile.
         """
         # Take a single reptile training step
-        # weights = []
+        weights = []
         for support_set, _ in meta_batch:
             # update the fast weights
             metrics = self._adapt(support_set, action_coeff=self.action_coeff, lang_coeff=self.lang_coeff, is_eval=False)
@@ -189,22 +193,22 @@ class Reptile(object):
             for metric_name, metric_value in metrics.items():
                 loss_lists[metric_name].append(metrics[metric_name])
 
-            # weights.append(deepcopy(self.network.state_dict()))
-            # self.network.load_state_dict(self.meta_network.state_dict())
+            weights.append(deepcopy(self.network.state_dict()))
+            self.network.load_state_dict(self.meta_network.state_dict())
         
-        # if len(weights) == 1:
-        #     weights = weights[0]
-        # else:
-        #     #  We have a meta batch size larger than one and need to average the weights
-        #     with torch.no_grad():
-        #         avg_weights = deepcopy(self.network.state_dict())
-        #         for k in avg_weights:
-        #             avg_tensor = torch.zeros_like(avg_weights[k])
-        #             for weight in weights:
-        #                 avg_tensor += weight[k]
-        #             avg_weights[k] = (avg_tensor / len(weights)).clone()
-        #         weights = avg_weights
-        # self.network.load_state_dict(weights)
+        if len(weights) == 1:
+            weights = weights[0]
+        else:
+            #  We have a meta batch size larger than one and need to average the weights
+            with torch.no_grad():
+                avg_weights = deepcopy(self.network.state_dict())
+                for k in avg_weights:
+                    avg_tensor = torch.zeros_like(avg_weights[k])
+                    for weight in weights:
+                        avg_tensor += weight[k]
+                    avg_weights[k] = (avg_tensor / len(weights)).clone()
+                weights = avg_weights
+        self.network.load_state_dict(weights)
 
         # Now set the gradients of the meta optimizer to be the weight differences
         self.meta_optim.zero_grad()
@@ -234,16 +238,16 @@ class Reptile(object):
             sampler = omniglot.OmniglotSampler(omniglot.NUM_TRAIN_CLASSES, 5, 200)  # Hard coded values
         elif isinstance(self.env.unwrapped, MazebaseGame) and isinstance(self.network, language_prediction.networks.CraftingDT):
             from language_prediction.datasets import meta_crafting_dataset
-            dataset = meta_crafting_dataset.SeqMetaCraftingDataset.load(self.dataset, self.vocab, num_support=self.num_support, num_query=self.num_query, dataset_fraction=self.dataset_fraction) # Must have created the vocab. Note that it was already given to the agent.
+            dataset = meta_crafting_dataset.SeqMetaCraftingDataset.load(self.dataset, self.vocab, tasks=self.train_tasks, num_support=self.num_support, num_query=self.num_query, dataset_fraction=self.dataset_fraction) # Must have created the vocab. Note that it was already given to the agent.
             if not self.validation_dataset is None:
-                validation_dataset = meta_crafting_dataset.SeqMetaCraftingDataset.load(self.validation_dataset, self.vocab, num_support=self.num_support, num_query=self.num_query, dataset_fraction=1.0)
+                validation_dataset = meta_crafting_dataset.SeqMetaCraftingDataset.load(self.validation_dataset, self.vocab, tasks=self.validation_tasks, num_support=self.num_support, num_query=self.num_query, dataset_fraction=1.0)
             collate_fn = meta_crafting_dataset.collate_fn
             sampler = None
         elif isinstance(self.env.unwrapped, MazebaseGame):
             from language_prediction.datasets import meta_crafting_dataset
-            dataset = meta_crafting_dataset.MetaCraftingDataset.load(self.dataset, self.vocab, num_support=self.num_support, num_query=self.num_query, dataset_fraction=self.dataset_fraction) # Must have created the vocab. Note that it was already given to the agent.
+            dataset = meta_crafting_dataset.MetaCraftingDataset.load(self.dataset, self.vocab, tasks=self.train_tasks, num_support=self.num_support, num_query=self.num_query, dataset_fraction=self.dataset_fraction) # Must have created the vocab. Note that it was already given to the agent.
             if not self.validation_dataset is None:
-                validation_dataset = meta_crafting_dataset.MetaCraftingDataset.load(self.validation_dataset, self.vocab, num_support=self.num_support, num_query=self.num_query, dataset_fraction=1.0)
+                validation_dataset = meta_crafting_dataset.MetaCraftingDataset.load(self.validation_dataset, self.vocab, tasks=self.validation_tasks, num_support=self.num_support, num_query=self.num_query, dataset_fraction=1.0)
             collate_fn = meta_crafting_dataset.collate_fn
             sampler = None
         else:
