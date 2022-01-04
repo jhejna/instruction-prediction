@@ -428,3 +428,89 @@ class ViT(nn.Module):
         
         return action_logits, lang_logits, unsup_logits # For unsupervised losses to be used later perhaps
 
+class ViTForward(nn.Module):
+
+    def __init__(self, num_actions, vocab, embed_weights, embed_dim=128, depth=4,
+                 num_heads=2, mlp_ratio=2., qkv_bias=True, drop_rate=0.1, attn_drop_rate=0.1, drop_path_rate=0.1,
+                 decoder_depth=2, unsup_dim=64):
+        super().__init__()
+        self.num_classes = num_actions
+        self.glove_embed_dim = 300
+        self.embed_dim = embed_dim
+        self.vocab = vocab
+        self.vocab_size = len(self.vocab)
+        self.num_img_tokens = 25 + 25 + 1 + 1 # Grid Emb, Grid Onehot, inventory, goal
+
+        # We only need a singular embedding!
+        self.embedding = torch.nn.Parameter(torch.zeros(1, 1, embed_dim))
+        self.state_encoder = StateEncoderFree(self.glove_embed_dim)
+
+        # If we have a different dim n_embd, we need to down sample
+        if self.embed_dim != self.glove_embed_dim:
+            self.downsample = nn.Linear(self.glove_embed_dim, self.embed_dim)
+
+        self.encoder = ViTEncoder(self.num_img_tokens, embed_dim=self.embed_dim, depth=depth, num_heads=num_heads, 
+                                       mlp_ratio=mlp_ratio, qkv_bias=qkv_bias, drop_rate=drop_rate, attn_drop_rate=attn_drop_rate, drop_path_rate=drop_path_rate)
+        self.action_head = nn.Linear(self.embed_dim, self.num_classes)
+
+        if decoder_depth > 0:
+            self.decoder = ViTDecoder(self.num_img_tokens, embed_dim=self.embed_dim, depth=decoder_depth, num_heads=num_heads, 
+                                       mlp_ratio=mlp_ratio, qkv_bias=qkv_bias, drop_rate=drop_rate, attn_drop_rate=attn_drop_rate, drop_path_rate=drop_path_rate)
+            self.vocab_head = nn.Linear(embed_dim, self.vocab_size - 1, bias=False)
+        else:
+            self.decoder = None
+
+        self.apply(_init_vit_weights) # Apply weight init before creating the unsupervised heads.
+
+        if unsup_dim > 0:
+            self._unsup_proj = nn.Parameter(torch.rand(unsup_dim, unsup_dim))
+            self.unsup_head = nn.Linear(self.embed_dim, unsup_dim)
+            self.unsup_mlp = nn.Sequential(nn.Linear(unsup_dim, 2*unsup_dim), nn.ReLU(), nn.Linear(2*unsup_dim, unsup_dim)) # Forward MLP for ATC.
+        else:
+            self._unsup_proj = None
+            self.unsup_head = None
+            self.unsup_mlp = None
+
+    @property
+    def unsup_proj(self):
+        # Property return for use in the training alg.
+        return self._unsup_proj
+
+    @property
+    def action_pad_idx(self):
+        return -100
+    
+    @property
+    def lang_pad_idx(self):
+        return self.vocab_size - 1 # A consequence of the Crafting Dataset implementation.
+
+    def forward(self, obs, forward_inputs=None, is_target=False):
+        assert forward_inputs is None
+        grid_embedding = obs['next_grid_embedding'] if is_target else obs['grid_embedding']
+        grid_onehot = obs['next_grid_onehot'] if is_target else obs['grid_onehot']
+        inventory = obs['next_inventory'] if is_target else obs['inventory']
+        goal = obs['next_goal'] if is_target else obs['goal']
+        x = self.state_encoder(grid_embedding, grid_onehot, inventory, goal)
+        assert x.shape[1] == self.num_img_tokens, "Num img tokens did not match encoder out"
+        if self.embed_dim != self.glove_embed_dim:
+            x = self.downsample(x) # Downsample the embeddings
+        
+        x = self.encoder(x)
+        action_logits = self.action_head(x[:, 0]) # Grab the first in the sequence
+
+        if 'action_forward' in obs and self.decoder is not None:
+            # run instruction prediction
+            target = self.embedding.expand(x.shape[0], -1, -1)
+            forward_logits = self.vocab_head(self.decoder(target, x, mask=None))
+        else:
+            forward_logits = None
+        
+        if self.unsup_head is not None:
+            # Run unsupervised prediction
+            unsup_logits = self.unsup_head(x[:, 0]) # Grab the CLS Token
+            if not is_target:
+                unsup_logits = self.unsup_mlp(unsup_logits) # Forward through the projection MLP
+        else:
+            unsup_logits = None
+        
+        return action_logits, forward_logits, unsup_logits # For unsupervised losses to be used later perhaps

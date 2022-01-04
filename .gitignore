@@ -2,7 +2,6 @@
 output/
 datasets/
 !language_prediction/datasets
-slurm/
 .vector_cache
 
 # Byte-compiled / optimized / DLL files

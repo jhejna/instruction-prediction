@@ -111,9 +111,10 @@ def load_vocabulary(load_name):
 
 class CraftingDataset(Dataset):
 
-    def __init__(self, path, vocab, dataset_fraction=1, skip=-1):
+    def __init__(self, path, vocab, dataset_fraction=1, skip=-1, forward_freq=-1):
         self.dataset_name = path
         self.skip = skip
+        self.forward_freq = forward_freq
 
         with open(self.dataset_name +'states', 'rb') as f:
             self.train_states = pickle.load(f)
@@ -174,7 +175,10 @@ class CraftingDataset(Dataset):
             next_index = min(index + self.skip, len(self) - 1)
             next_obs_dict = {"next_" + k: v for k,v in self._get_obs(next_index).items()}
             obs.update(next_obs_dict) # Update it with next
-
+        if self.forward_freq > 0:
+            # Add the next action
+            forward_index = min(index + self.forward_freq, len(self) - 1)
+            obs['action_forward'] = torch.Tensor(self.train_actions_onehot[forward_index])
         try:
             temp_instruction = self.train_instructions[index]
             instruction = []

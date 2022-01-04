@@ -138,7 +138,12 @@ class BehaviorCloningForwardPrediction(object):
 
         # Remove language inputs for a speedup if we don't need it.
         if self.forward_coeff > 0:
-            forward_inputs, forward_labels = actions[:, ::self.forward_freq][:, :-1], actions[:, ::self.forward_freq][:, 1:]
+            if len(actions.shape) > 1:
+                forward_inputs, forward_labels = actions[:, ::self.forward_freq][:, :-1], actions[:, ::self.forward_freq][:, 1:]
+            else:
+                # We need to get the forward actions from the observations.
+                forward_inputs = None # Its OK if its none.
+                forward_labels = obs['action_forward'].long()
         else:
             forward_inputs, forward_labels = None, None
         
@@ -166,7 +171,7 @@ class BehaviorCloningForwardPrediction(object):
             action_loss = 0
 
         if self.forward_coeff > 0:
-            if len(forward_inputs.shape) > 1:
+            if len(forward_labels.shape) > 1:
                 forward_logits = forward_logits.reshape(-1, forward_logits.size(-1))
                 forward_labels = forward_labels.reshape(-1)
             forward_loss = self.forward_criterion(forward_logits, forward_labels)
@@ -187,7 +192,7 @@ class BehaviorCloningForwardPrediction(object):
         return total_loss, metrics
         
 
-    def train(self, path, total_steps, log_freq=100, eval_freq=5000, eval_ep=0, validation_metric="action_loss", use_eval_mode=True, workers=4):        
+    def train(self, path, total_steps, log_freq=100, eval_freq=5000, eval_ep=0, validation_metric="action_loss", use_eval_mode=True, workers=4, max_eval_steps=-1):        
         logger = Logger(path=path)
 
         print("[Lang IL] Training a model with tunable parameters", sum(p.numel() for p in self.network.parameters() if p.requires_grad))
@@ -202,9 +207,9 @@ class BehaviorCloningForwardPrediction(object):
         elif isinstance(self.env.unwrapped, MazebaseGame):
             from language_prediction.datasets import crafting_dataset
             skip = 1 if self.unsup_coeff > 0.0 else -1
-            dataset = crafting_dataset.CraftingDataset(self.dataset, self.vocab, dataset_fraction=self.dataset_fraction, skip=skip) # Must have created the vocab. Note that it was already given to the agent.
+            dataset = crafting_dataset.CraftingDataset(self.dataset, self.vocab, dataset_fraction=self.dataset_fraction, skip=skip, forward_freq=self.forward_freq) # Must have created the vocab. Note that it was already given to the agent.
             if not self.validation_dataset is None:
-                validation_dataset = crafting_dataset.CraftingDataset(self.validation_dataset, self.vocab, dataset_fraction=1.0, skip=skip)
+                validation_dataset = crafting_dataset.CraftingDataset(self.validation_dataset, self.vocab, dataset_fraction=1.0, skip=skip,  forward_freq=self.forward_freq)
             collate_fn = partial(crafting_dataset.collate_fn, vocab_size=len(self.vocab))
         else:
             raise ValueError("Unknown environment type passed in.")
@@ -234,7 +239,6 @@ class BehaviorCloningForwardPrediction(object):
                 for metric_name, metric_value in metrics.items():
                     loss_lists[metric_name].append(metrics[metric_name])
                 step += 1
-                print("Stepped")
 
                 if self.unsup_coeff > 0.0 and step % self.unsup_ema_update_freq == 0:
                     ema_parameters(self.network, self.ema_network, self.unsup_ema_tau)
@@ -264,12 +268,16 @@ class BehaviorCloningForwardPrediction(object):
                         logger.log_from_dict(metrics, "eval_env")
                     
                     if self.validation_dataset:
+                        eval_steps = 0
                         validation_loss_lists = defaultdict(list)
                         with torch.no_grad():
                             for valid_obs, valid_ac in validation_dataloader:
                                 _, metrics = self._compute_loss(valid_obs, valid_ac)
+                                eval_steps += 1
                                 for metric_name, metric_value in metrics.items():
                                     validation_loss_lists[metric_name].append(metrics[metric_name])
+                                if max_eval_steps > 0 and eval_steps == max_eval_steps:
+                                    break
 
                         current_validation_metric = np.mean(validation_loss_lists[validation_metric])
                         if current_validation_metric < best_validation_metric:

@@ -7,7 +7,7 @@ eval_env: mazebase-v0
 eval_env_kwargs:
   config: unseen_full
 
-alg: BehaviorCloning
+alg: BehaviorCloningForwardPrediction
 alg_kwargs:
   dataset: datasets/new_data/dataset_
   validation_dataset: datasets/valid_new_data/dataset_
@@ -20,20 +20,19 @@ alg_kwargs:
     weight_decay: 0.05
   grad_norm: 1.0
   action_coeff: 1.0
-  lang_coeff: 0.25
-  unsup_coeff: 0.25
-  unsup_ema_tau: 0.01
-  unsup_ema_update_freq: 1
+  forward_coeff: 0.25
+  unsup_coeff: 0.0
 
 train_kwargs:
   total_steps: 325000
-  log_freq: 10
-  eval_ep: 10
-  eval_freq: 2000
+  log_freq: 100
+  eval_ep: 50
+  eval_freq: 5000
   validation_metric: action_accuracy
   use_eval_mode: False
+  max_eval_steps: 50
 
-network: ViT
+network: ViTForward
 network_kwargs:
   depth: 4
   num_heads: 2

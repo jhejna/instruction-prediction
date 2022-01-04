@@ -1,0 +1,5 @@
+{
+    "base": "configs/babyai/dt_forward.yaml",
+    "seed": [1, 2],
+    "alg_kwargs.dataset_fraction": [1.0, 0.5, 0.25]
+}

@@ -1,0 +1,5 @@
+{
+    "base": "configs/vit/vit_forward.yaml",
+    "seed": [1, 2, 3, 4],
+    "alg_kwargs.dataset_fraction": [0.2, 0.4, 0.6]
+}
