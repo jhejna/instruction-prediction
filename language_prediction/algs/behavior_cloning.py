@@ -148,6 +148,7 @@ class BehaviorCloning(object):
             with torch.no_grad():
                 _, _, target_logits = self.ema_network(obs, instructions=None, is_target=True)
             unsup_loss = compute_curl_loss(anchor_logits, target_logits, self.network.unsup_proj, actions)
+            metrics["unsup_loss"] = unsup_loss.item()
         else:
             unsup_loss = 0
 

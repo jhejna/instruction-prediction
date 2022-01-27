@@ -32,7 +32,7 @@ Datasets for the experiments can be generated using scripts from this repository
 
 To create the BabyAI datasets for BossLevel used in the paper, run the following command:
 ```
-python scripts/create_babyai_dataset.py --env BabyAI-BossLevel-v0 --dataset-type traj traj_contrastive --max-mission-len 42 --skip 3 --episodes 50000 --valid-episodes 2500 --path datasets/BabyAIBossLevel_l42_50k --jobs 10
+python scripts/create_babyai_dataset.py --env BabyAI-BossLevel-v0 --dataset-type traj traj_contrastive --max-mission-len 36 --skip 3 --episodes 50000 --valid-episodes 2500 --path datasets/BabyAIBossLevel_l36_50k --jobs 10
 ```
 This will create two datasets, one with 'next' images used for unsupervised objectives and one without. The one without can be used in cases where memory is limited. The command also launches 10 parallel jobs, each collecting 5000 demos. The number of jobs can easily be reduced. Datasets for the other BabyAI levels can be created by modifying this command.
 

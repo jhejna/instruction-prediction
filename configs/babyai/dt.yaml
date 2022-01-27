@@ -10,8 +10,8 @@ time_limit: 450
 
 alg: BehaviorCloning
 alg_kwargs:
-  dataset: datasets/BabyAIBossLevel_l42_50k_traj_contrastive.pkl
-  validation_dataset: datasets/BabyAIBossLevel_l42_50k_valid_traj_contrastive.pkl
+  dataset: datasets/BabyAIBossLevel_l36_50k_traj_contrastive.pkl
+  validation_dataset: datasets/BabyAIBossLevel_l36_50k_valid_traj_contrastive.pkl
   dataset_fraction: 1.0
   batch_size: 32
   optim_kwargs:
