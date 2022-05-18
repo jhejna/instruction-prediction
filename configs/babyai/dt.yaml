@@ -3,7 +3,7 @@
 env: BabyAI-BossLevel-v0
 wrapper: LanguageWrapper
 wrapper_kwargs:
-  max_len: 42
+  max_len: 36
   pad: true
 
 time_limit: 450
