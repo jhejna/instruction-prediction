@@ -1,19 +1,19 @@
-# Improving Long-Horizon Imitation Through Language Prediction
+# Improving Long-Horizon Imitation Through Instruction Prediction
 
-This is the official code repository for *Improving Long-Horizon Imitation Through Language Prediction* by [Donald (Joey) Hejna](https://jhejna.github.io), [Pieter Abbeel](https://people.eecs.berkeley.edu/~pabbeel/), and [Lerrel Pinto](https://www.lerrelpinto.com/).
+This is the official code repository for *Improving Long-Horizon Imitation Through Language Prediction* by [Joey Hejna](https://jhejna.github.io), [Pieter Abbeel](https://people.eecs.berkeley.edu/~pabbeel/), and [Lerrel Pinto](https://www.lerrelpinto.com/).
 
 This repository includes easy to use code to reproduce the main results of the paper, which can be found [here](https://openreview.net/pdf?id=1Z3h4rCLvo-).
 
 If you use this repository, please cite our work:
 ```
 @inproceedings{
-anonymous2022improving,
-title={Improving Long-Horizon Imitation Through Language Prediction},
-author={Anonymous},
-booktitle={Submitted to The Tenth International Conference on Learning Representations },
+hejna2023improving,
+title={Improving Long-Horizon Imitation Through Instruction Prediction},
+author={Hejna, Joey and Abbeel, Pieter and Pinto, Lerrel}, 
 year={2022},
-url={https://openreview.net/forum?id=1Z3h4rCLvo-},
-note={under review}
+journal={Proceedings of the AAAI Conference on Artificial Intelligence}
+volume={37}
+url={https://github.com/jhejna/instruction-prediction},
 }
 ```
 
